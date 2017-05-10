@@ -1,0 +1,42 @@
+---
+
+image: docker:latest
+
+variables:
+  NO_SUDO: "true"
+
+cache:
+  paths:
+    - ~/.pre-commit
+    - ~/.cache/pip/
+
+services:
+  - docker:dind
+
+before_script:
+  - apk add --no-cache bash python py-pip git
+  - curl -sSL https://raw.githubusercontent.com/harbur/captain/v1.1.0/install.sh | bash
+  - docker version
+  - docker info
+  - pip install --upgrade pip pre-commit
+  - pip install docker-compose==1.8.1
+
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  script:
+    - echo $USER
+    - pre-commit run --all-files
+    - PATH=$PATH:/$HOME/.captain/bin/ ./build.sh
+    - docker login -u $DOCKER_REPO_USER -p $DOCKER_REPO_PASSWORD registry.gitlab.com
+    - BUILD_DATE= VCS_REF=latest VERSION=latest WORKSPACE=. $HOME/.captain/bin/captain push data_db_setup
+
+test:
+  stage: test
+  script:
+    - docker login -u $DOCKER_REPO_USER -p $DOCKER_REPO_PASSWORD registry.gitlab.com
+    - PATH=$PATH:/$HOME/.captain/bin/ ./tests/test.sh
