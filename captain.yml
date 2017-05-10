@@ -5,5 +5,3 @@ data_db_setup:
     - echo "Building hbpmip/data-db-setup image"
   post:
     - echo "Finished building hbpmip/data-db-setup image"
-  test:
-    - ./tests/test.sh
