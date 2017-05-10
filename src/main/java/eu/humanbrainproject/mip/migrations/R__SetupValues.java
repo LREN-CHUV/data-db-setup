@@ -1,4 +1,4 @@
-package eu.humanbrainproject.mip.migrations.clm;
+package eu.humanbrainproject.mip.migrations;
 
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
