@@ -124,7 +124,7 @@ public class R__SetupValues implements JdbcMigration {
                     case "int":
                         return new Optional(new ParseInt());
                     default:
-                        throw new RuntimeException("Unknown type " + colType);
+                        throw new RuntimeException("Unknown type " + colType + " on column " + column);
                 }
             }
 
