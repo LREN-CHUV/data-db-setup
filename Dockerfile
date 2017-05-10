@@ -29,7 +29,8 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
 
-COPY --from=build-java-env /project/target/setup-data.jar \
+COPY --from=build-java-env /project/target/setup-data.jar /usr/share/jars/
+COPY --from=build-java-env \
         /usr/share/maven/ref/repository/net/sf/supercsv/super-csv/2.4.0/super-csv-2.4.0.jar \
         /usr/share/maven/ref/repository/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar \
         /flyway/jars/
