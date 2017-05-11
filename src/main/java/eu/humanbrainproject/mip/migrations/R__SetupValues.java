@@ -113,7 +113,7 @@ public class R__SetupValues implements JdbcMigration {
             if (columnsDef.getProperty(column + ".constraints", "").equals("is_index")) {
                 return new UniqueHashCode();
             } else {
-                String colType = shortType(columnsDef.getProperty(column + ".type", ""));
+                String colType = shortType(columnsDef.getProperty(column + ".type", "?"));
                 switch (colType) {
                     case "char":
                         return new Optional();
