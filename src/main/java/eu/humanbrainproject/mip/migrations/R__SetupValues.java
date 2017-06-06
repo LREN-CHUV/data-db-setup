@@ -2,6 +2,7 @@ package eu.humanbrainproject.mip.migrations;
 
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
+import org.flywaydb.core.api.migration.MigrationChecksumProvider;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ParseDouble;
 import org.supercsv.cellprocessor.ParseInt;
@@ -18,8 +19,14 @@ import java.sql.Types;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 @SuppressWarnings("unused")
-public class R__SetupValues implements JdbcMigration {
+public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider {
 
     private static final String SQL_INSERT = "INSERT INTO ${table}(${keys}) VALUES(${values})";
     private static final String TABLE_REGEX = "\\$\\{table\\}";
@@ -150,6 +157,41 @@ public class R__SetupValues implements JdbcMigration {
 
     private static String shortType(String sqlType) {
         return sqlType.replaceAll("\\(.*\\)", "").toLowerCase();
+    }
+
+    @Override
+    public Integer getChecksum() {
+        int checksum = 0;
+        try {
+            Properties columns = new Properties();
+            columns.load(getClass().getResourceAsStream("columns.properties"));
+            final String csvFileName = columns.getProperty("__CSV_FILE", "/data/values.csv");
+            checksum = computeChecksum(csvFileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return checksum;
+    }
+
+    private static int computeChecksum(String filepath) {
+        final int BUFFER_SIZE = 2048;
+        int checksum = 0;
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");  // MD5 or SHA-1 or SHA-256
+            InputStream is = new FileInputStream(filepath);
+            byte[] bytes = new byte[BUFFER_SIZE];
+            int numBytes;
+            while ((numBytes = is.read(bytes)) != -1) {
+                md.update(bytes, 0, numBytes);
+            }
+            byte[] digest = md.digest();
+            for (Byte b: digest) {
+                checksum += b.intValue();
+            }
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+        }
+        return checksum;
     }
 
 }
