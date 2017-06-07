@@ -165,30 +165,25 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
         try {
             Properties columns = new Properties();
             columns.load(getClass().getResourceAsStream("columns.properties"));
-            final String csvFileName = columns.getProperty("__CSV_FILE", "/data/values.csv");
-            checksum = computeChecksum(csvFileName);
+            final String dataset = columns.getProperty("__DATASET", "unknown");
+            checksum = computeChecksum(dataset);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return checksum;
     }
 
-    private static int computeChecksum(String filepath) {
-        final int BUFFER_SIZE = 2048;
+    private static int computeChecksum(String dataset) {
         int checksum = 0;
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");  // MD5 or SHA-1 or SHA-256
-            InputStream is = new FileInputStream(filepath);
-            byte[] bytes = new byte[BUFFER_SIZE];
-            int numBytes;
-            while ((numBytes = is.read(bytes)) != -1) {
-                md.update(bytes, 0, numBytes);
-            }
+            byte[] bytes = dataset.getBytes();
+            md.update(bytes, 0, bytes.length);
             byte[] digest = md.digest();
             for (Byte b: digest) {
                 checksum += b.intValue();
             }
-        } catch (NoSuchAlgorithmException | IOException e) {
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return checksum;
