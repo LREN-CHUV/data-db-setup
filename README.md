@@ -16,21 +16,20 @@ This database contains the data used for reference, including:
 Run:
 
 ```console
-$ docker run -i -t --rm -e FLYWAY_DBMS=postgres -e FLYWAY_HOST=`hostname` hbpmip/data-db-setup:1.0.0 migrate
+$ docker run -i -t --rm-e FLYWAY_HOST=`hostname` hbpmip/data-db-setup:1.0.0 migrate
 ```
 
 where the environment variables are:
 
-* FLYWAY_DBMS: [required] Type of the database (oracle, postgres...).
-* FLYWAY_HOST: [required] database host.
-* FLYWAY_PORT: database port.
-* FLYWAY_DATABASE_NAME: name of the database or schema
+* FLYWAY_HOST: database host, default to 'db'.
+* FLYWAY_PORT: database port, default to 5432.
+* FLYWAY_DATABASE_NAME: name of the database or schema, default to 'data'
 * FLYWAY_URL: JDBC url to the database, constructed by default from FLYWAY_DBMS, FLYWAY_HOST, FLYWAY_PORT and FLYWAY_DATABASE_NAME
 * FLYWAY_DRIVER: Fully qualified classname of the jdbc driver (autodetected by default based on flyway.url)
-* FLYWAY_USER: database user.
-* FLYWAY_PASSWORD: database password.
+* FLYWAY_USER: database user, default to 'data'.
+* FLYWAY_PASSWORD: database password, default to 'data'.
 * FLYWAY_SCHEMAS: Optional, comma-separated list of schemas managed by Flyway
-* FLYWAY_TABLE: Optional, name of Flyway's datadata table (default: schema_version)
+* FLYWAY_TABLE: Optional, name of Flyway's metadata table (default: schema_version)
 
 ## Build
 

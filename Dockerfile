@@ -42,6 +42,8 @@ ENV FLYWAY_DBMS=postgresql \
     FLYWAY_HOST=db \
     FLYWAY_PORT=5432 \
     FLYWAY_DATABASE_NAME=data \
+    FLYWAY_USER=data \
+    FLYWAY_PASSWORD=data \
     FLYWAY_SCHEMAS=public \
     FLYWAY_MIGRATION_PACKAGE="eu/humanbrainproject/mip/migrations"
 
