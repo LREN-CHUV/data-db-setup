@@ -23,7 +23,7 @@ RUN cp /usr/share/maven/ref/settings-docker.xml /root/.m2/settings.xml \
     && mvn clean package
 
 # Final image
-FROM hbpmip/flyway:4.2.0-1
+FROM hbpmip/flyway:4.2.0-3
 
 ARG BUILD_DATE
 ARG VCS_REF
