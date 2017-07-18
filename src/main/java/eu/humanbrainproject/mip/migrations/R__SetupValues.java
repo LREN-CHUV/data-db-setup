@@ -17,16 +17,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Types;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 @SuppressWarnings("unused")
 public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider {
+
+    private static final Logger LOG = Logger.getLogger("Setup values");
 
     private static final String SQL_INSERT = "INSERT INTO ${table}(${keys}) VALUES(${values})";
     private static final String TABLE_REGEX = "\\$\\{table\\}";
@@ -69,6 +71,9 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
                         int index = 1;
                         for (Object v : values) {
                             String sqlType = columns.getProperty(header[index - 1] + ".type", "VARCHAR");
+                            if (columns.getProperty(header[index - 1] + ".type") == null) {
+                                LOG.warning("Column type for " + header[index - 1] + " is not defined in columns.properties");
+                            }
                             if (v == null) {
                                 statement.setNull(index, getSqlType(sqlType));
                             } else {
@@ -99,7 +104,7 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
 
             connection.commit();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, "Cannot migrate data", e);
             throw e;
         }
     }
@@ -168,7 +173,7 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
             final String dataset = columns.getProperty("__DATASET", "unknown");
             checksum = computeChecksum(dataset);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.log(Level.WARNING, "Cannot load columns.properties", e);
         }
         return checksum;
     }
@@ -184,7 +189,7 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
                 checksum += b.intValue();
             }
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            LOG.log(Level.WARNING, "Cannot compute checksum", e);
         }
         return checksum;
     }
