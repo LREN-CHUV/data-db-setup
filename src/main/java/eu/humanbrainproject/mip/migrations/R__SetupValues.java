@@ -49,7 +49,7 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
 
                 // skip the header
                 final String[] header = csvReader.getHeader(true);
-                final CellProcessor[] processors = getProcessors(columns);
+                final CellProcessor[] processors = getProcessors(columns, header);
 
                 String questionMarks = StringUtils.repeat("?,", header.length);
                 questionMarks = (String) questionMarks.subSequence(0, questionMarks
@@ -132,16 +132,31 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
      * @param columnsDef
      * @return the cell processors
      */
-    private static CellProcessor[] getProcessors(Properties columnsDef) {
+    private static CellProcessor[] getProcessors(Properties columnsDef, String[] csvHeader) {
 
         String columnsStr = columnsDef.getProperty("__COLUMNS");
         List<String> columns = Arrays.asList(StringUtils.split(columnsStr, ","));
 
+        if (csvHeader.length != columns.size()) {
+            throw new RuntimeException("Mismatch between CSV file headers and declared list of columns: found " +
+                csvHeader.length + " columns in CSV file, expected " + columns.size());
+        }
+        for (int i = 0; i < csvHeader.length; i++) {
+            if (!csvHeader[i].equals(columns.get(i))) {
+               throw new RuntimeException("Mismatch between CSV file headers and declared list of columns: found '" +
+                  csvHeader[i] + "' in CVS headers, expected '" + columns.get(i) + "'");
+            }
+        }
+
         List<CellProcessor> processors = columns.stream().map(column -> {
+            String colType = shortType(columnsDef.getProperty(column + ".type", "?"));
             if (columnsDef.getProperty(column + ".constraints", "").equals("is_index")) {
-                return new UniqueHashCode();
+                if ("int".equals(colType)) {
+                   return new ParseInt();
+                } else {
+                   return new UniqueHashCode();
+                }
             } else {
-                String colType = shortType(columnsDef.getProperty(column + ".type", "?"));
                 switch (colType) {
                     case "char":
                         return new Optional();
