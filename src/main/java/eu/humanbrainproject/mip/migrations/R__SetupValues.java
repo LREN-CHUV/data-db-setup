@@ -70,9 +70,10 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
 
                         int index = 1;
                         for (Object v : values) {
-                            String sqlType = columns.getProperty(header[index - 1] + ".type", "VARCHAR");
-                            if (columns.getProperty(header[index - 1] + ".type") == null) {
-                                LOG.warning("Column type for " + header[index - 1] + " is not defined in columns.properties");
+                            String column = header[index - 1];
+                            String sqlType = columns.getProperty(column + ".type", "VARCHAR");
+                            if (columns.getProperty(column + ".type") == null) {
+                                LOG.warning("Column type for " + column + " is not defined in columns.properties");
                             }
                             if (v == null) {
                                 statement.setNull(index, getSqlType(sqlType));
@@ -80,13 +81,28 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
                                 switch (getSqlType(sqlType)) {
                                     case Types.CHAR:
                                     case Types.VARCHAR:
-                                        statement.setString(index, (String) v);
+                                        if (v instanceof String) {
+                                          statement.setString(index, (String) v);
+                                        } else {
+                                          LOG.severe("On column " + column + ", String value expected, found " + v.getClass());
+                                          throw new RuntimeException("On column " + column + ", String value expected, found " + v.getClass());
+                                        }
                                         break;
                                     case Types.INTEGER:
-                                        statement.setInt(index, (Integer) v);
+                                        if (v instanceof Integer) {
+                                          statement.setInt(index, (Integer) v);
+                                        } else {
+                                          LOG.severe("On column " + column + ", Integer value expected, found " + v.getClass());
+                                          throw new RuntimeException("On column " + column + ", Integer value expected, found " + v.getClass());
+                                        }
                                         break;
                                     case Types.NUMERIC:
-                                        statement.setDouble(index, (Double) v);
+                                        if (v instanceof Double) {
+                                          statement.setDouble(index, (Double) v);
+                                        } else {
+                                          LOG.severe("On column " + column + ", Double value expected, found " + v.getClass());
+                                          throw new RuntimeException("On column " + column + ", Double value expected, found " + v.getClass());
+                                        }
                                         break;
                                 }
                             }
