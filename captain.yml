@@ -1,4 +1,4 @@
-data_db_setup:
+target_image:
   build: Dockerfile
   image: hbpmip/data-db-setup
   pre:
