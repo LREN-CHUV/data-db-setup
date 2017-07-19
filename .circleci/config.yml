@@ -8,7 +8,6 @@ jobs:
       - image: hbpmip/docker-compose-for-ci:17.06-0
     environment:
        - CIRCLECI: true
-       - tests_sql_dir: /root/src/tests/sql
     steps:
       - setup_remote_docker:
           version: 17.06.0-ce
