@@ -15,6 +15,7 @@ import org.supercsv.prefs.CsvPreference;
 import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 import java.util.logging.Level;
@@ -37,92 +38,103 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
     private static final int BATCH_SIZE = 1000;
 
     public void migrate(Connection connection) throws Exception {
-        String datasets = System.getProperty("DATASETS", "dataset");
+        String[] datasets = System.getProperty("DATASETS", "dataset").split(",");
         try {
 
             Properties columns = new Properties();
             columns.load(getClass().getResourceAsStream("columns.properties"));
-            final String tableName = columns.getProperty("__TABLE", "data");
-            final String csvFileName = columns.getProperty("__CSV_FILE", "/data/values.csv");
-            final String deleteSql = columns.getProperty("__DELETE_SQL", "DELETE FROM " + tableName);
 
-            try (ICsvListReader csvReader = new CsvListReader(new FileReader(csvFileName), CsvPreference.STANDARD_PREFERENCE)) {
-
-                // skip the header
-                final String[] header = csvReader.getHeader(true);
-                final CellProcessor[] processors = getProcessors(columns, header);
-
-                String questionMarks = StringUtils.repeat("?,", header.length);
-                questionMarks = (String) questionMarks.subSequence(0, questionMarks
-                        .length() - 1);
-
-                String query = SQL_INSERT.replaceFirst(TABLE_REGEX, tableName);
-                query = query.replaceFirst(KEYS_REGEX, "\"" + StringUtils.join(header, "\",\"") + "\"");
-                query = query.replaceFirst(VALUES_REGEX, questionMarks);
-
-                try (PreparedStatement statement = connection.prepareStatement(query)) {
-                    connection.setAutoCommit(false);
-
-                    // Delete data from table before loading csv
-                    connection.createStatement().execute(deleteSql);
-
-                    List<Object> values;
-                    while ((values = csvReader.read(processors)) != null) {
-
-                        int index = 1;
-                        for (Object v : values) {
-                            String column = header[index - 1];
-                            String sqlType = columns.getProperty(column + ".type", "VARCHAR");
-                            if (columns.getProperty(column + ".type") == null) {
-                                LOG.warning("Column type for " + column + " is not defined in columns.properties");
-                            }
-                            if (v == null) {
-                                statement.setNull(index, getSqlType(sqlType));
-                            } else {
-                                switch (getSqlType(sqlType)) {
-                                    case Types.CHAR:
-                                    case Types.VARCHAR:
-                                        if (v instanceof String) {
-                                          statement.setString(index, (String) v);
-                                        } else {
-                                          LOG.severe("On column " + column + ", String value expected, found " + v.getClass());
-                                          throw new RuntimeException("On column " + column + ", String value expected, found " + v.getClass());
-                                        }
-                                        break;
-                                    case Types.INTEGER:
-                                        if (v instanceof Integer) {
-                                          statement.setInt(index, (Integer) v);
-                                        } else {
-                                          LOG.severe("On column " + column + ", Integer value expected, found " + v.getClass());
-                                          throw new RuntimeException("On column " + column + ", Integer value expected, found " + v.getClass());
-                                        }
-                                        break;
-                                    case Types.NUMERIC:
-                                        if (v instanceof Double) {
-                                          statement.setDouble(index, (Double) v);
-                                        } else {
-                                          LOG.severe("On column " + column + ", Double value expected, found " + v.getClass());
-                                          throw new RuntimeException("On column " + column + ", Double value expected, found " + v.getClass());
-                                        }
-                                        break;
-                                }
-                            }
-                            index++;
-                        }
-                        statement.addBatch();
-                        if (csvReader.getLineNumber() % BATCH_SIZE == 0) {
-                            statement.executeBatch();
-                        }
-                    }
-                    statement.executeBatch(); // insert remaining records
-                }
-
+            for (String dataset: datasets) {
+                loadDataset(connection, columns, dataset);
             }
 
             connection.commit();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Cannot migrate data", e);
             throw e;
+        }
+    }
+
+    private void loadDataset(Connection connection, Properties columns, String datasetName) throws IOException, SQLException {
+        Properties dataset = new Properties();
+        dataset.load(getClass().getResourceAsStream(datasetName + ".properties"));
+
+        final String csvFileName = dataset.getProperty("__CSV_FILE", "/data/values.csv");
+        final String tableName = dataset.getProperty("__TABLE", columns.getProperty("__TABLE"));
+        final String deleteSql = dataset.getProperty("__DELETE_SQL", "DELETE FROM " + tableName)
+                .replaceFirst(TABLE_REGEX, tableName);
+
+        try (ICsvListReader csvReader = new CsvListReader(new FileReader(csvFileName), CsvPreference.STANDARD_PREFERENCE)) {
+
+            // skip the header
+            final String[] header = csvReader.getHeader(true);
+            final CellProcessor[] processors = getProcessors(columns, header);
+
+            String questionMarks = StringUtils.repeat("?,", header.length);
+            questionMarks = (String) questionMarks.subSequence(0, questionMarks
+                    .length() - 1);
+
+            String query = SQL_INSERT.replaceFirst(TABLE_REGEX, tableName);
+            query = query.replaceFirst(KEYS_REGEX, "\"" + StringUtils.join(header, "\",\"") + "\"");
+            query = query.replaceFirst(VALUES_REGEX, questionMarks);
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                connection.setAutoCommit(false);
+
+                // Delete data from table before loading csv
+                connection.createStatement().execute(deleteSql);
+
+                List<Object> values;
+                while ((values = csvReader.read(processors)) != null) {
+
+                    int index = 1;
+                    for (Object v : values) {
+                        String column = header[index - 1];
+                        String sqlType = columns.getProperty(column + ".type", "VARCHAR");
+                        if (columns.getProperty(column + ".type") == null) {
+                            LOG.warning("Column type for " + column + " is not defined in columns.properties");
+                        }
+                        if (v == null) {
+                            statement.setNull(index, getSqlType(sqlType));
+                        } else {
+                            switch (getSqlType(sqlType)) {
+                                case Types.CHAR:
+                                case Types.VARCHAR:
+                                    if (v instanceof String) {
+                                      statement.setString(index, (String) v);
+                                    } else {
+                                      LOG.severe("On column " + column + ", String value expected, found " + v.getClass());
+                                      throw new RuntimeException("On column " + column + ", String value expected, found " + v.getClass());
+                                    }
+                                    break;
+                                case Types.INTEGER:
+                                    if (v instanceof Integer) {
+                                      statement.setInt(index, (Integer) v);
+                                    } else {
+                                      LOG.severe("On column " + column + ", Integer value expected, found " + v.getClass());
+                                      throw new RuntimeException("On column " + column + ", Integer value expected, found " + v.getClass());
+                                    }
+                                    break;
+                                case Types.NUMERIC:
+                                    if (v instanceof Double) {
+                                      statement.setDouble(index, (Double) v);
+                                    } else {
+                                      LOG.severe("On column " + column + ", Double value expected, found " + v.getClass());
+                                      throw new RuntimeException("On column " + column + ", Double value expected, found " + v.getClass());
+                                    }
+                                    break;
+                            }
+                        }
+                        index++;
+                    }
+                    statement.addBatch();
+                    if (csvReader.getLineNumber() % BATCH_SIZE == 0) {
+                        statement.executeBatch();
+                    }
+                }
+                statement.executeBatch(); // insert remaining records
+            }
+
         }
     }
 
@@ -177,7 +189,7 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
         return processors.toArray(new CellProcessor[processors.size()]);
     }
 
-    private int getSqlType(String sqlType) {
+    private static int getSqlType(String sqlType) {
         switch (shortType(sqlType)) {
             case "char":
                 return Types.CHAR;
