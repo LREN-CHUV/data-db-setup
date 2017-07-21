@@ -178,7 +178,8 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
                     StringUtils.join(diff2table, ','));
         }
 
-        List<CellProcessor> processors = columns.stream().map(column -> {
+        // Use the list of columns from the CSV header as the source of truth, this is what will be used by SuperCSV
+        List<CellProcessor> processors = csvColumns.stream().map(column -> {
             String colType = shortType(columnsDef.getProperty(column + ".type", "?"));
             if (columnsDef.getProperty(column + ".constraints", "").equals("is_index")) {
                 if ("int".equals(colType)) {
