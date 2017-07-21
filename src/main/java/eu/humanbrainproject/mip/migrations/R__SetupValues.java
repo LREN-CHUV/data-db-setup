@@ -39,7 +39,11 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
     private static final int BATCH_SIZE = 1000;
 
     public void migrate(Connection connection) throws Exception {
-        String[] datasets = System.getProperty("DATASETS", "default").split(",");
+        String datasetsStr = System.getenv("DATASETS");
+        if (datasetsStr == null) {
+            datasetsStr = "default";
+        }
+        String[] datasets = datasetsStr.split(",");
         try {
 
             Properties columns = new Properties();
