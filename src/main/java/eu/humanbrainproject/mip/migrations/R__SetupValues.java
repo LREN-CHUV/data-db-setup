@@ -57,7 +57,7 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
 
     private void loadDataset(Connection connection, Properties columns, String datasetName) throws IOException, SQLException {
         Properties dataset = new Properties();
-        dataset.load(getClass().getResourceAsStream(datasetName + ".properties"));
+        dataset.load(getClass().getResourceAsStream(datasetName + "_dataset.properties"));
 
         final String csvFileName = dataset.getProperty("__CSV_FILE", "/data/values.csv");
         final String tableName = dataset.getProperty("__TABLE", columns.getProperty("__TABLE"));
