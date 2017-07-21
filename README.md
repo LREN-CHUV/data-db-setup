@@ -16,7 +16,7 @@ This database contains the data used for reference, including:
 Run:
 
 ```console
-$ docker run -i -t --rm -e FLYWAY_HOST=`hostname` hbpmip/data-db-setup:2.0.5 migrate
+$ docker run -i -t --rm -e FLYWAY_HOST=`hostname` hbpmip/data-db-setup:2.0.6 migrate
 ```
 
 where the environment variables are:
