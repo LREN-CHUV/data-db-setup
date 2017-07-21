@@ -178,11 +178,6 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
                     StringUtils.join(diff2table, ','));
         }
 
-        if (csvHeader.length != columns.size()) {
-            throw new RuntimeException("Mismatch between CSV file headers and declared list of columns: found " +
-                csvHeader.length + " columns in CSV file, expected " + columns.size());
-        }
-
         List<CellProcessor> processors = columns.stream().map(column -> {
             String colType = shortType(columnsDef.getProperty(column + ".type", "?"));
             if (columnsDef.getProperty(column + ".constraints", "").equals("is_index")) {
