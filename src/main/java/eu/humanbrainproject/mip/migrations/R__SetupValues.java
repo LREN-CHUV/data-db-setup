@@ -152,23 +152,35 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
      * Sets up the processors used for the examples. There are 10 CSV columns, so 10 processors are defined. Empty
      * columns are read as null (hence the NotNull() for mandatory columns).
      *
-     * @param columnsDef
+     * @param columnsDef Properties defining the columns
      * @return the cell processors
      */
     private static CellProcessor[] getProcessors(Properties columnsDef, String[] csvHeader) {
 
         String columnsStr = columnsDef.getProperty("__COLUMNS");
         List<String> columns = Arrays.asList(StringUtils.split(columnsStr, ","));
+        List<String> csvColumns = Arrays.asList(csvHeader);
+
+        List<String> diff2csv = new ArrayList<>(columns);
+        diff2csv.removeAll(csvColumns);
+
+        List<String> diff2table = new ArrayList<>(csvColumns);
+        diff2table.removeAll(columns);
+
+        if (!diff2csv.isEmpty()) {
+            for (String column: diff2csv) {
+                LOG.warning("Column " + column + " is defined in the table but not in CSV file");
+            }
+        }
+
+        if (!diff2table.isEmpty()) {
+            throw new RuntimeException("Mismatch between CSV file headers and list of columns in the table: the following columns do not exist in the table '" +
+                    StringUtils.join(diff2table, ','));
+        }
 
         if (csvHeader.length != columns.size()) {
             throw new RuntimeException("Mismatch between CSV file headers and declared list of columns: found " +
                 csvHeader.length + " columns in CSV file, expected " + columns.size());
-        }
-        for (int i = 0; i < csvHeader.length; i++) {
-            if (!csvHeader[i].equals(columns.get(i))) {
-               throw new RuntimeException("Mismatch between CSV file headers and declared list of columns: found '" +
-                  csvHeader[i] + "' in CVS headers, expected '" + columns.get(i) + "'");
-            }
         }
 
         List<CellProcessor> processors = columns.stream().map(column -> {
