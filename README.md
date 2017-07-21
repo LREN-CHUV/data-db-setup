@@ -30,6 +30,7 @@ where the environment variables are:
 * FLYWAY_PASSWORD: database password, default to 'data'.
 * FLYWAY_SCHEMAS: Optional, comma-separated list of schemas managed by Flyway
 * FLYWAY_TABLE: Optional, name of Flyway's metadata table (default: schema_version)
+* DATASETS: column-separated list of datasets to load. Each dataset should have a descriptor defined as a Java properties file (&lt;dataset&gt;.properties) located in a jar under eu.humanbrainproject.mip.migrations package.
 
 ## Build
 
