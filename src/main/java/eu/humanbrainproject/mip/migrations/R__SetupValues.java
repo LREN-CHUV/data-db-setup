@@ -13,6 +13,7 @@ import org.supercsv.io.ICsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
 import java.io.FileReader;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -38,7 +39,7 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
     private static final int BATCH_SIZE = 1000;
 
     public void migrate(Connection connection) throws Exception {
-        String[] datasets = System.getProperty("DATASETS", "dataset").split(",");
+        String[] datasets = System.getProperty("DATASETS", "default").split(",");
         try {
 
             Properties columns = new Properties();
@@ -57,7 +58,12 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
 
     private void loadDataset(Connection connection, Properties columns, String datasetName) throws IOException, SQLException {
         Properties dataset = new Properties();
-        dataset.load(getClass().getResourceAsStream(datasetName + "_dataset.properties"));
+        InputStream datasetResource = getClass().getResourceAsStream(datasetName + "_dataset.properties");
+        if (datasetResource == null) {
+            throw new RuntimeException("Cannot load resource from " + getClass().getPackage().getName() +
+                    "." + datasetName + "_dataset.properties. Check DATASETS environment variable and contents of the jar");
+        }
+        dataset.load(datasetResource);
 
         final String csvFileName = dataset.getProperty("__CSV_FILE", "/data/values.csv");
         final String tableName = dataset.getProperty("__TABLE", columns.getProperty("__TABLE"));
