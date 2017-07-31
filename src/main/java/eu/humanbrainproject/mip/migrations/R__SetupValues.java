@@ -1,6 +1,8 @@
 package eu.humanbrainproject.mip.migrations;
 
 import org.apache.commons.lang3.StringUtils;
+import org.flywaydb.core.api.MigrationVersion;
+import org.flywaydb.core.api.migration.MigrationInfoProvider;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 import org.flywaydb.core.api.migration.MigrationChecksumProvider;
 import org.supercsv.cellprocessor.Optional;
@@ -28,7 +30,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 @SuppressWarnings("unused")
-public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider {
+public class R__SetupValues implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
 
     private static final Logger LOG = Logger.getLogger("Setup values");
 
@@ -39,11 +41,7 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
     private static final int BATCH_SIZE = 1000;
 
     public void migrate(Connection connection) throws Exception {
-        String datasetsStr = System.getenv("DATASETS");
-        if (datasetsStr == null) {
-            datasetsStr = "default";
-        }
-        String[] datasets = datasetsStr.split(",");
+        String[] datasets = getDatasets();
         try {
 
             Properties columns = new Properties();
@@ -58,6 +56,14 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
             LOG.log(Level.SEVERE, "Cannot migrate data", e);
             throw e;
         }
+    }
+
+    private String[] getDatasets() {
+        String datasetsStr = System.getenv("DATASETS");
+        if (datasetsStr == null) {
+            datasetsStr = "default";
+        }
+        return datasetsStr.split(",");
     }
 
     private void loadDataset(Connection connection, Properties columns, String datasetName) throws IOException, SQLException {
@@ -229,23 +235,35 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
     @Override
     public Integer getChecksum() {
         int checksum = 0;
-        try {
-            Properties columns = new Properties();
-            columns.load(getClass().getResourceAsStream("columns.properties"));
-            final String dataset = columns.getProperty("__DATASET", "unknown");
+        for (String dataset: getDatasets()) {
             checksum = computeChecksum(dataset);
-        } catch (IOException e) {
-            LOG.log(Level.WARNING, "Cannot load columns.properties", e);
         }
         return checksum;
     }
 
-    private static int computeChecksum(String dataset) {
+    private int computeChecksum(String dataset) {
         int checksum = 0;
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");  // MD5 or SHA-1 or SHA-256
+
+            // Use the name of the dataset
             byte[] bytes = dataset.getBytes();
             md.update(bytes, 0, bytes.length);
+
+            // Use the values in the  dataset
+            InputStream datasetResource = getClass().getResourceAsStream(dataset + "_dataset.properties");
+            if (datasetResource != null) {
+                byte[] data = new byte[1024];
+                int read;
+                try {
+                    while ((read = datasetResource.read(data)) > 0) {
+                        md.update(data, 0, read);
+                    }
+                } catch (IOException e) {
+                    LOG.log(Level.WARNING, "Cannot read data from " + dataset + "_dataset.properties", e);
+                }
+            }
+
             byte[] digest = md.digest();
             for (Byte b: digest) {
                 checksum += b.intValue();
@@ -256,4 +274,14 @@ public class R__SetupValues implements JdbcMigration, MigrationChecksumProvider 
         return checksum;
     }
 
+    @Override
+    public MigrationVersion getVersion() {
+        return null;
+    }
+
+    @Override
+    public String getDescription() {
+        String[] datasets = getDatasets();
+        return "Setup " + StringUtils.join(datasets, ',') + " dataset" + (datasets.length > 1 ? "s" : "");
+    }
 }
