@@ -1,0 +1,49 @@
+version: '2'
+
+services:
+
+  data_db:
+    image: "postgres:9.6.3-alpine"
+    container_name: "data-db"
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=data
+      - POSTGRES_PASSWORD=data
+
+  wait_dbs:
+    image: "waisbrot/wait"
+    links:
+      - "data_db:data_db"
+    environment:
+      - TARGETS=data_db:5432
+      - TIMEOUT=60
+
+  data_db_setup:
+    build:
+      context: .
+      dockerfile: Dockerfile.data
+    container_name: "edsd-data-db-setup"
+    environment:
+      - FLYWAY_DBMS=postgresql
+      - FLYWAY_HOST=db
+      - FLYWAY_PORT=5432
+      - FLYWAY_DATABASE_NAME=data
+      - FLYWAY_USER=data
+      - FLYWAY_PASSWORD=data
+    links:
+     - "data_db:db"
+
+  # Issues with volume mounting here, workaround by building an image including the sources
+  data_db_check:
+   build:
+     context: .
+     dockerfile: Dockerfile.check
+   container_name: "data-db-check"
+   environment:
+     - HOST=db
+     - PORT=5432
+     - DATABASE=data
+     - USER=data
+     - PASSWORD=data
+   links:
+     - "data_db:db"
