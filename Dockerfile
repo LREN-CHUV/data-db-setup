@@ -47,6 +47,8 @@ ENV FLYWAY_DBMS=postgresql \
     FLYWAY_SCHEMAS=public \
     FLYWAY_MIGRATION_PACKAGE="eu/humanbrainproject/mip/migrations"
 
+ENV IMAGE="hbpmip/data-db-setup:$VERSION"
+
 CMD ["migrate"]
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
