@@ -25,3 +25,11 @@ jobs:
           name: "Build the project"
           command: |
             PATH=$PATH:/$HOME/.captain/bin/ ./build.sh
+      - run:
+          name: "Test with one dataset"
+          command: |
+            PATH=$PATH:/$HOME/.captain/bin/ ./tests/one-dataset/test.sh
+      - run:
+          name: "Test with several datasets"
+          command: |
+            PATH=$PATH:/$HOME/.captain/bin/ ./tests/several-datasets/test.sh

@@ -236,7 +236,7 @@ public class R__SetupValues implements JdbcMigration, MigrationInfoProvider, Mig
     public Integer getChecksum() {
         int checksum = 0;
         for (String dataset: getDatasets()) {
-            checksum = computeChecksum(dataset);
+            checksum += computeChecksum(dataset);
         }
         return checksum;
     }
