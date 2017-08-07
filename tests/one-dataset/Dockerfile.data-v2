@@ -7,7 +7,7 @@ FROM hbpmip/data-db-setup as parent-image
 FROM maven:3.5.0-jdk-8-alpine as build-java-env
 
 COPY --from=parent-image /usr/share/jars/data-db-setup.jar /flyway/jars/
-COPY src/main/java/ /project/src/
+COPY src-v2/main/java/ /project/src/
 
 WORKDIR /project/src
 RUN jar uvf /flyway/jars/data-db-setup.jar -C . .
@@ -21,6 +21,7 @@ ARG VERSION
 
 COPY --from=build-java-env /flyway/jars/data-db-setup.jar /flyway/jars/data-db-setup.jar
 COPY sql/V1_0__create.sql /flyway/sql/V1_0__create.sql
-COPY sql/data.csv /data/
+COPY sql/V2_0__add_column.sql /flyway/sql/V2_0__add_column.sql
+COPY sql/data-v2.csv /data/
 
 ENV DATASETS test1
