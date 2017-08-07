@@ -47,3 +47,33 @@ services:
      - PASSWORD=data
    links:
      - "data_db:db"
+
+  data_db_setup_v2:
+    build:
+      context: .
+      dockerfile: Dockerfile.data-v2
+    container_name: "data-db-setup-v2"
+    environment:
+      - FLYWAY_DBMS=postgresql
+      - FLYWAY_HOST=db
+      - FLYWAY_PORT=5432
+      - FLYWAY_DATABASE_NAME=data
+      - FLYWAY_USER=data
+      - FLYWAY_PASSWORD=data
+    links:
+     - "data_db:db"
+
+  # Issues with volume mounting here, workaround by building an image including the sources
+  data_db_check_v2:
+   build:
+     context: .
+     dockerfile: Dockerfile.check-v2
+   container_name: "data-db-check-v2"
+   environment:
+     - HOST=db
+     - PORT=5432
+     - DATABASE=data
+     - USER=data
+     - PASSWORD=data
+   links:
+     - "data_db:db"

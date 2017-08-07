@@ -27,6 +27,8 @@ fi
 $DOCKER_COMPOSE up -d data_db
 $DOCKER_COMPOSE build data_db_setup
 $DOCKER_COMPOSE build data_db_check
+$DOCKER_COMPOSE build data_db_setup_v2
+$DOCKER_COMPOSE build data_db_check_v2
 $DOCKER_COMPOSE run wait_dbs
 
 echo
