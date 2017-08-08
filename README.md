@@ -32,6 +32,11 @@ where the environment variables are:
 * FLYWAY_TABLE: Optional, name of Flyway's metadata table (default: schema_version)
 * DATASETS: column-separated list of datasets to load. Each dataset should have a descriptor defined as a Java properties file (\<dataset\>\_dataset.properties) located in a jar under eu.humanbrainproject.mip.migrations package.
 
+The following environment variables should be defined statically by child images of data-db-setup:
+
+* IMAGE: name of this Docker image, including version (for help message)
+* DATASETS: column-separated list of datasets to load.
+
 ## Build
 
 Run: `./build.sh`

@@ -1,0 +1,3 @@
+FROM hbpmip/pgtap:0.96.0-3
+
+COPY sql/testSchema.sql sql/testData.sql /test/
