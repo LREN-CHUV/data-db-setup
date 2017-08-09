@@ -260,6 +260,6 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
     @Override
     public String getDescription() {
         String[] datasets = getDatasets();
-        return "Setup " + StringUtils.join(datasets, ',') + " dataset" + (datasets.length > 1 ? "s" : "");
+        return "Setup dataset" + (datasets.length > 1 ? "s " : " ") + StringUtils.join(datasets, ',');
     }
 }

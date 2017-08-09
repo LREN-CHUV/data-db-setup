@@ -33,3 +33,11 @@ jobs:
           name: "Test with several datasets"
           command: |
             PATH=$PATH:/$HOME/.captain/bin/ ./tests/several-datasets/test.sh
+      - run:
+          name: "Test creating a view joining tables"
+          command: |
+            PATH=$PATH:/$HOME/.captain/bin/ ./tests/joined-tables/test.sh
+      - run:
+          name: "Test creating a view for a union of tables"
+          command: |
+            PATH=$PATH:/$HOME/.captain/bin/ ./tests/union-of-tables/test.sh

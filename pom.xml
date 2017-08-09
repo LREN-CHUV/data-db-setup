@@ -54,6 +54,7 @@
         <directory>${src.dir}</directory>
         <includes>
           <include>**/*.properties</include>
+          <include>**/*.sql</include>
         </includes>
         <filtering>false</filtering>
       </resource>

@@ -24,6 +24,8 @@ else
   DOCKER_COMPOSE="sudo docker-compose"
 fi
 
+trap '$DOCKER_COMPOSE rm -f' SIGINT SIGQUIT
+
 $DOCKER_COMPOSE up -d data_db
 $DOCKER_COMPOSE build data_db_setup
 $DOCKER_COMPOSE build data_db_check

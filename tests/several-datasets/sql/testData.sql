@@ -13,7 +13,7 @@ SELECT is(count(*)::INT, 150, 'Missing rows?')
   FROM sample_data;
 
 SELECT is(count(*)::INT, 1, 'Migration of test1 and test2 datasets should be present')
-  FROM schema_version where description='Setup test1,test2 datasets';
+  FROM schema_version where description='Setup datasets test1,test2';
 
 -- Clean up
 SELECT * FROM finish();

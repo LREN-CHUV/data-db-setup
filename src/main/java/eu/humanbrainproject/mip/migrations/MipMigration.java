@@ -1,17 +1,16 @@
 package eu.humanbrainproject.mip.migrations;
 
+import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 abstract class MipMigration implements JdbcMigration {
 
-    private Map<String, Properties> tableColumns = new HashMap<>();
-    private Map<String, Properties> datasetProperties = new HashMap<>();
+    private final Map<String, Properties> tableColumns = new HashMap<>();
+    private final Map<String, Properties> datasetProperties = new HashMap<>();
 
     String[] getDatasets() {
         String datasetsStr = System.getenv("DATASETS");
@@ -36,8 +35,9 @@ abstract class MipMigration implements JdbcMigration {
         String propertiesFile = (datasetName == null) ? "dataset.properties" : datasetName + "_dataset.properties";
         InputStream datasetResource = getClass().getResourceAsStream(propertiesFile);
         if (datasetResource == null) {
-            throw new RuntimeException("Cannot load resource from " + getClass().getPackage().getName() +
-                    "." + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
+            throw new RuntimeException("Cannot load resource from " +
+                    getClass().getPackage().getName().replaceAll("\\.", "/") +
+                    "/" + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
         }
         return datasetResource;
     }
@@ -61,10 +61,25 @@ abstract class MipMigration implements JdbcMigration {
             datasetResource = getClass().getResourceAsStream(propertiesFile);
         }
         if (datasetResource == null) {
-            throw new RuntimeException("Cannot load resource from " + getClass().getPackage().getName() +
-                    "." + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
+            throw new RuntimeException("Cannot load resource from " +
+                    getClass().getPackage().getName().replaceAll("\\.", "/") +
+                    "/" + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
         }
         return datasetResource;
+    }
+
+    List<String> getIdColumns(String tableName) throws IOException {
+        Properties columnsDef = getColumnsProperties(tableName);
+        String columnsStr = columnsDef.getProperty("__COLUMNS");
+        List<String> columns = Arrays.asList(StringUtils.split(columnsStr, ","));
+        List<String> ids = new ArrayList<>();
+
+        for (String column: columns) {
+            if (columnsDef.getProperty(column + ".constraints", "").equals("is_index")) {
+                ids.add(column);
+            }
+        }
+        return ids;
     }
 
 }

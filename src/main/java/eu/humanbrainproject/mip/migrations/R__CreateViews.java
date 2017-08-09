@@ -22,7 +22,7 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
     private static final Logger LOG = Logger.getLogger("Create views");
 
-    private Map<String, Properties> viewProperties = new HashMap<>();
+    private final Map<String, Properties> viewProperties = new HashMap<>();
 
     public void migrate(Connection connection) throws Exception {
         String[] views = getViews();
@@ -50,8 +50,9 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
             String tableName = tableProperties.getProperty("__TABLE", table);
             String columns = tableProperties.getProperty("__COLUMNS");
+            List<String> ids = getIdColumns(table);
 
-            final Table templateValue = new Table(tableName, columns);
+            final Table templateValue = new Table(tableName, columns, StringUtils.join(ids, ','));
             scopes.put(table, templateValue);
             scopes.put("table" + (++i), templateValue);
         }
@@ -60,7 +61,7 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
         String viewName = viewProperties.getProperty("__VIEW", view);
         String viewColumns = viewProperties.getProperty("__COLUMNS");
 
-        scopes.put("view", new Table(viewName, viewColumns));
+        scopes.put("view", new Table(viewName, viewColumns, ""));
 
         StringWriter writer = new StringWriter();
         MustacheFactory mf = new DefaultMustacheFactory();
@@ -110,24 +111,32 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
             viewResource = getClass().getResourceAsStream(propertiesFile);
         }
         if (viewResource == null) {
-            throw new RuntimeException("Cannot load resource from " + getClass().getPackage().getName() +
-                    "." + propertiesFile + ". Check VIEWS environment variable and contents of the jar");
+            throw new RuntimeException("Cannot load resource for view " + viewName + " from " +
+                    getClass().getPackage().getName().replaceAll("\\.", "/") +
+                    "/" + propertiesFile + ". Check VIEWS environment variable and contents of the jar");
         }
         return viewResource;
     }
 
-    private InputStream getViewTemplateResource(String viewName) {
-        Properties viewProperties = this.viewProperties.get(viewName);
-        String propertiesFile = viewProperties.getProperty("__SQL_TEMPLATE",
-                (viewName == null) ? "view.mustache.sql" : viewName + "_view.mustache.sql");
-        InputStream viewTemplateResource = getClass().getResourceAsStream(propertiesFile);
-        if (viewTemplateResource == null && getViews().length == 1) {
-            propertiesFile = "view.properties" ;
+    private InputStream getViewTemplateResource(String viewName) throws IOException {
+        Properties viewProperties = getViewProperties(viewName);
+        String propertiesFile = viewProperties.getProperty("__SQL_TEMPLATE");
+        InputStream viewTemplateResource;
+
+        if (propertiesFile != null) {
             viewTemplateResource = getClass().getResourceAsStream(propertiesFile);
+        } else {
+            propertiesFile = (viewName == null) ? "view.mustache.sql" : viewName + "_view.mustache.sql";
+            viewTemplateResource = getClass().getResourceAsStream(propertiesFile);
+            if (viewTemplateResource == null && getViews().length == 1) {
+                propertiesFile = "view.mustache.sql";
+                viewTemplateResource = getClass().getResourceAsStream(propertiesFile);
+            }
         }
         if (viewTemplateResource == null) {
-            throw new RuntimeException("Cannot load resource from " + getClass().getPackage().getName() +
-                    "." + propertiesFile + ". Check VIEWS environment variable and contents of the jar");
+            throw new RuntimeException("Cannot load resource for view " + viewName + " from " +
+                    getClass().getPackage().getName().replaceAll("\\.", "/") +
+                    "/" + propertiesFile + ". Check VIEWS environment variable and contents of the jar");
         }
         return viewTemplateResource;
     }
@@ -137,7 +146,11 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
         String[] views = getViews();
         int checksum = 0;
         for (String view: views) {
-            checksum += computeChecksum(view);
+            try {
+                checksum += computeChecksum(view);
+            } catch (RuntimeException e) {
+                LOG.log(Level.SEVERE, "Cannot compute checksum", e);
+            }
         }
         return checksum;
     }
@@ -150,16 +163,15 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
         crc32.update(bytes, 0, bytes.length);
 
         // Use the values in the dataset
-        InputStream viewResource = getViewResource(view);
-        int read;
         try {
+            InputStream viewResource = getViewResource(view);
             crcForResource(crc32, viewResource);
         } catch (IOException e) {
             LOG.log(Level.WARNING, "Cannot read data from " + view + "_view.properties", e);
         }
 
-        InputStream viewTemplateResource = getViewTemplateResource(view);
         try {
+            InputStream viewTemplateResource = getViewTemplateResource(view);
             crcForResource(crc32, viewTemplateResource);
         } catch (IOException e) {
             LOG.log(Level.WARNING, "Cannot read data from " + view + "_view.mustache.sql", e);
@@ -201,11 +213,13 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
         private final String name;
         private final String columns;
+        private final String ids;
 
-        Table(String name, String columns) {
+        Table(String name, String columns, String ids) {
 
             this.name = name;
             this.columns = columns;
+            this.ids = ids;
         }
 
         public String getName() {
@@ -216,10 +230,29 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
             return columns;
         }
 
-        public String getPrefixedColumns() {
+        public String getIds() {
+            return ids;
+        }
+
+        public String getQualifiedColumns() {
             List<String> cols = Arrays.asList(columns.split(","));
             cols.replaceAll(s -> name + "." + s);
             return StringUtils.join(cols, ',');
         }
+
+        public String getQualifiedColumnsNoId() {
+            List<String> cols = new ArrayList<>(Arrays.asList(columns.split(",")));
+            List<String> idList = Arrays.asList(ids.split(","));
+            cols.removeAll(idList);
+            cols.replaceAll(s -> name + "." + s);
+            return StringUtils.join(cols, ',');
+        }
+
+        public String getQualifiedId() {
+            List<String> cols = Arrays.asList(ids.split(","));
+            cols.replaceAll(s -> name + "." + s);
+            return StringUtils.join(cols, ',');
+        }
+
     }
 }

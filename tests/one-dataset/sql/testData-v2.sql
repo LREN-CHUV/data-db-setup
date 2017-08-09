@@ -10,7 +10,7 @@ SELECT is(count(*)::INT, 149, 'Old records remaining?')
   FROM sample_data;
 
 SELECT is(count(*)::INT, 2, 'Migration and upgrade of test1 dataset should be present')
-  FROM schema_version where description='Setup test1 dataset';
+  FROM schema_version where description='Setup dataset test1';
 
 -- Clean up
 SELECT * FROM finish();
