@@ -27,8 +27,6 @@ fi
 $DOCKER_COMPOSE up -d data_db
 $DOCKER_COMPOSE build data_db_setup
 $DOCKER_COMPOSE build data_db_check
-$DOCKER_COMPOSE build data_db_setup_v2
-$DOCKER_COMPOSE build data_db_check_v2
 $DOCKER_COMPOSE run wait_dbs
 
 echo
@@ -40,11 +38,6 @@ echo
 echo "Test idempotence"
 $DOCKER_COMPOSE run data_db_setup
 $DOCKER_COMPOSE run data_db_check
-
-echo
-echo "Test upgrade"
-$DOCKER_COMPOSE run data_db_setup_v2
-$DOCKER_COMPOSE run data_db_check_v2
 
 # Cleanup
 echo
