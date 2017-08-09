@@ -33,6 +33,7 @@ COPY --from=build-java-env /project/target/data-db-setup.jar /usr/share/jars/
 COPY --from=build-java-env \
         /usr/share/maven/ref/repository/net/sf/supercsv/super-csv/2.4.0/super-csv-2.4.0.jar \
         /usr/share/maven/ref/repository/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar \
+        /usr/share/maven/ref/repository/com/github/spullara/mustache/java/compiler/0.9.5/compiler-0.9.5.jar \
         /flyway/jars/
 COPY docker/run.sh /
 

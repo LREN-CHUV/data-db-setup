@@ -26,12 +26,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.zip.CRC32;
 
 @SuppressWarnings("unused")
-public class R__SetupValues implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
+public class R__SetupValues extends MipMigration implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
 
     private static final Logger LOG = Logger.getLogger("Setup values");
 
@@ -41,66 +39,22 @@ public class R__SetupValues implements JdbcMigration, MigrationInfoProvider, Mig
     private static final String VALUES_REGEX = "\\$\\{values\\}";
     private static final int BATCH_SIZE = 1000;
 
-    private Map<String, Properties> tableColumns = new HashMap<>();
-    private Map<String, Properties> datasetProperties = new HashMap<>();
-
     public void migrate(Connection connection) throws Exception {
         String[] datasets = getDatasets();
         try {
+
+            connection.setAutoCommit(false);
 
             for (String dataset: datasets) {
                 loadDataset(connection, dataset);
             }
 
             connection.commit();
+
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Cannot migrate data", e);
             throw e;
         }
-    }
-
-    private String[] getDatasets() {
-        String datasetsStr = System.getenv("DATASETS");
-        if (datasetsStr == null) {
-            datasetsStr = "default";
-        }
-        return datasetsStr.split(",");
-    }
-
-    private Properties getDatasetProperties(String datasetName) throws IOException {
-        Properties datasetProperties = this.datasetProperties.get(datasetName);
-        if (datasetProperties == null) {
-            datasetProperties = new Properties();
-            String propertiesFile = (datasetName == null) ? "dataset.properties" : datasetName + "_dataset.properties";
-            InputStream datasetResource = getClass().getResourceAsStream(propertiesFile);
-            if (datasetResource == null) {
-                throw new RuntimeException("Cannot load resource from " + getClass().getPackage().getName() +
-                        "." + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
-            }
-            datasetProperties.load(datasetResource);
-            this.datasetProperties.put(datasetName, datasetProperties);
-        }
-        return datasetProperties;
-    }
-
-    private Properties getColumnsProperties(String tableName) throws IOException {
-        Properties columnsProperties = tableColumns.get(tableName);
-        if (columnsProperties == null) {
-            columnsProperties = new Properties();
-            String propertiesFile = (tableName == null) ? "columns.properties" : tableName.toLowerCase() + "_columns.properties";
-            InputStream datasetResource = getClass().getResourceAsStream(propertiesFile);
-            if (datasetResource == null && getDatasets().length == 1) {
-                propertiesFile = "columns.properties";
-                datasetResource = getClass().getResourceAsStream(propertiesFile);
-            }
-            if (datasetResource == null) {
-                throw new RuntimeException("Cannot load resource from " + getClass().getPackage().getName() +
-                        "." + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
-            }
-            columnsProperties.load(datasetResource);
-            tableColumns.put(tableName, columnsProperties);
-        }
-        return columnsProperties;
     }
 
     private void loadDataset(Connection connection, String datasetName) throws IOException, SQLException {
@@ -131,7 +85,6 @@ public class R__SetupValues implements JdbcMigration, MigrationInfoProvider, Mig
             query = query.replaceFirst(VALUES_REGEX, questionMarks);
 
             try (PreparedStatement statement = connection.prepareStatement(query)) {
-                connection.setAutoCommit(false);
 
                 // Delete data from table before loading csv
                 connection.createStatement().execute(deleteSql);
@@ -285,17 +238,15 @@ public class R__SetupValues implements JdbcMigration, MigrationInfoProvider, Mig
         crc32.update(bytes, 0, bytes.length);
 
         // Use the values in the dataset
-        InputStream datasetResource = getClass().getResourceAsStream(dataset + "_dataset.properties");
-        if (datasetResource != null) {
-            byte[] data = new byte[1024];
-            int read;
-            try {
-                while ((read = datasetResource.read(data)) > 0) {
-                    crc32.update(data, 0, read);
-                }
-            } catch (IOException e) {
-                LOG.log(Level.WARNING, "Cannot read data from " + dataset + "_dataset.properties", e);
+        InputStream datasetResource = getDatasetResource(dataset);
+        byte[] data = new byte[1024];
+        int read;
+        try {
+            while ((read = datasetResource.read(data)) > 0) {
+                crc32.update(data, 0, read);
             }
+        } catch (IOException e) {
+            LOG.log(Level.WARNING, "Cannot read data from " + dataset + "_dataset.properties", e);
         }
 
         return (int) crc32.getValue();
