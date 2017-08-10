@@ -111,7 +111,7 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
             viewResource = getClass().getResourceAsStream(propertiesFile);
         }
         if (viewResource == null) {
-            throw new RuntimeException("Cannot load resource for view " + viewName + " from " +
+            throw new IllegalStateException("Cannot load resource for view " + viewName + " from " +
                     getClass().getPackage().getName().replaceAll("\\.", "/") +
                     "/" + propertiesFile + ". Check VIEWS environment variable and contents of the jar");
         }
@@ -134,7 +134,7 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
             }
         }
         if (viewTemplateResource == null) {
-            throw new RuntimeException("Cannot load resource for view " + viewName + " from " +
+            throw new IllegalStateException("Cannot load resource for view " + viewName + " from " +
                     getClass().getPackage().getName().replaceAll("\\.", "/") +
                     "/" + propertiesFile + ". Check VIEWS environment variable and contents of the jar");
         }

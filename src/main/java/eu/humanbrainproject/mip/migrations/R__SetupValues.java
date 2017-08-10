@@ -63,7 +63,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
         final String csvFileName = dataset.getProperty("__CSV_FILE", "/data/values.csv");
         final String tableName = dataset.getProperty("__TABLE");
         if (tableName == null) {
-            throw new RuntimeException("__TABLE properties is not defined for dataset " + datasetName);
+            throw new IllegalArgumentException("__TABLE properties is not defined for dataset " + datasetName);
         }
 
         final Properties columns = getColumnsProperties(tableName);
@@ -99,17 +99,18 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
                         if (columns.getProperty(column + ".type") == null) {
                             LOG.warning("Column type for " + column + " is not defined in columns.properties");
                         }
+                        final int sqlTypeCode = getSqlType(sqlType);
                         if (v == null) {
-                            statement.setNull(index, getSqlType(sqlType));
+                            statement.setNull(index, sqlTypeCode);
                         } else {
-                            switch (getSqlType(sqlType)) {
+                            switch (sqlTypeCode) {
                                 case Types.CHAR:
                                 case Types.VARCHAR:
                                     if (v instanceof String) {
                                       statement.setString(index, (String) v);
                                     } else {
                                       LOG.severe("On column " + column + ", String value expected, found " + v.getClass());
-                                      throw new RuntimeException("On column " + column + ", String value expected, found " + v.getClass());
+                                      throw new IllegalArgumentException("On column " + column + ", String value expected, found " + v.getClass());
                                     }
                                     break;
                                 case Types.INTEGER:
@@ -117,7 +118,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
                                       statement.setInt(index, (Integer) v);
                                     } else {
                                       LOG.severe("On column " + column + ", Integer value expected, found " + v.getClass());
-                                      throw new RuntimeException("On column " + column + ", Integer value expected, found " + v.getClass());
+                                      throw new IllegalArgumentException("On column " + column + ", Integer value expected, found " + v.getClass());
                                     }
                                     break;
                                 case Types.NUMERIC:
@@ -125,9 +126,11 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
                                       statement.setDouble(index, (Double) v);
                                     } else {
                                       LOG.severe("On column " + column + ", Double value expected, found " + v.getClass());
-                                      throw new RuntimeException("On column " + column + ", Double value expected, found " + v.getClass());
+                                      throw new IllegalArgumentException("On column " + column + ", Double value expected, found " + v.getClass());
                                     }
                                     break;
+                                default:
+                                    throw new IllegalArgumentException("Unknown SQL type code " + sqlTypeCode + " on column " + column);
                             }
                         }
                         index++;
@@ -169,7 +172,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
         }
 
         if (!diff2table.isEmpty()) {
-            throw new RuntimeException("Mismatch between CSV file headers and list of columns in the table: the following columns do not exist in the table '" +
+            throw new IllegalArgumentException("Mismatch between CSV file headers and list of columns in the table: the following columns do not exist in the table '" +
                     StringUtils.join(diff2table, ','));
         }
 
@@ -193,7 +196,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
                     case "int":
                         return new Optional(new ParseInt());
                     default:
-                        throw new RuntimeException("Unknown type " + colType + " on column " + column);
+                        throw new IllegalArgumentException("Unknown type " + colType + " on column " + column);
                 }
             }
 
@@ -213,7 +216,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
             case "numeric":
                 return Types.NUMERIC;
             default:
-                throw new RuntimeException("Unknown SQL type: " + sqlType);
+                throw new IllegalArgumentException("Unknown SQL type: " + sqlType);
         }
     }
 

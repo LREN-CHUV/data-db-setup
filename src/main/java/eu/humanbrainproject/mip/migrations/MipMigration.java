@@ -35,7 +35,7 @@ abstract class MipMigration implements JdbcMigration {
         String propertiesFile = (datasetName == null) ? "dataset.properties" : datasetName + "_dataset.properties";
         InputStream datasetResource = getClass().getResourceAsStream(propertiesFile);
         if (datasetResource == null) {
-            throw new RuntimeException("Cannot load resource from " +
+            throw new IllegalStateException("Cannot load resource from " +
                     getClass().getPackage().getName().replaceAll("\\.", "/") +
                     "/" + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
         }
@@ -61,7 +61,7 @@ abstract class MipMigration implements JdbcMigration {
             datasetResource = getClass().getResourceAsStream(propertiesFile);
         }
         if (datasetResource == null) {
-            throw new RuntimeException("Cannot load resource from " +
+            throw new IllegalStateException("Cannot load resource from " +
                     getClass().getPackage().getName().replaceAll("\\.", "/") +
                     "/" + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
         }

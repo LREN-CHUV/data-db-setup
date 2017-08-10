@@ -5,11 +5,13 @@
 
 ## Introduction
 
-This project uses Flyway to manage the database migration scripts for the 'research-db' database used by MIP.
+This project uses Flyway to manage the database migration scripts for the research-grade data tables used by MIP.
 
-This database contains the data used for reference, including:
+The research-grade data tables contain the following types of data:
 
 * the features (values) for each Common Data Elements (CDE) defined by MIP.
+* the features extracted from research datasets (ADNI, PPMI...)
+* the features extracted from clinical data
 
 ## Usage
 
