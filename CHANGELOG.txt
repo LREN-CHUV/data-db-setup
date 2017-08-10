@@ -9,3 +9,7 @@
 ## 2.0.0 - 2017-07-21
 
 * Support multiple datasets
+
+## 1.0.0 - 2017-05-11
+
+* First stable release
