@@ -84,6 +84,6 @@ related_projects:
   - name: meta-db-setup
     mip_building_block: reference
     relationship: see-also
-  - name: mip-cde-db-setup
+  - name: mip-cde-data-db-setup
     mip_building_block: reference
     relationship: other-depends-on
