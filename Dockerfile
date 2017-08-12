@@ -24,6 +24,7 @@ RUN cp /usr/share/maven/ref/settings-docker.xml /root/.m2/settings.xml \
 
 # Final image
 FROM hbpmip/flyway:4.2.0-4
+MAINTAINER Ludovic Claude <ludovic.claude@chuv.ch>
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -50,6 +51,7 @@ ENV FLYWAY_DBMS=postgresql \
 
 ENV IMAGE="hbpmip/data-db-setup:$VERSION"
 
+WORKDIR /flyway
 CMD ["migrate"]
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
