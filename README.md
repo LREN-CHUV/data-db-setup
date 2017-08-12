@@ -18,7 +18,7 @@ The research-grade data tables contain the following types of data:
 Run:
 
 ```console
-$ docker run -i -t --rm -e FLYWAY_HOST=`hostname` hbpmip/data-db-setup:2.1.1 migrate
+$ docker run -i -t --rm -e FLYWAY_HOST=`hostname` hbpmip/data-db-setup:2.1.2 migrate
 ```
 
 where the environment variables are:
