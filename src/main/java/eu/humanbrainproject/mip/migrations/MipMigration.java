@@ -68,10 +68,15 @@ abstract class MipMigration implements JdbcMigration {
         return datasetResource;
     }
 
-    List<String> getIdColumns(String tableName) throws IOException {
+    List<String> getColumns(String tableName) throws IOException {
         Properties columnsDef = getColumnsProperties(tableName);
         String columnsStr = columnsDef.getProperty("__COLUMNS");
-        List<String> columns = Arrays.asList(StringUtils.split(columnsStr, ","));
+        return Arrays.asList(StringUtils.split(columnsStr, ","));
+    }
+
+    List<String> getIdColumns(String tableName) throws IOException {
+        Properties columnsDef = getColumnsProperties(tableName);
+        List<String> columns = getColumns(tableName);
         List<String> ids = new ArrayList<>();
 
         for (String column: columns) {

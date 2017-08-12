@@ -49,19 +49,20 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
             Properties tableProperties = getColumnsProperties(table);
 
             String tableName = tableProperties.getProperty("__TABLE", table);
-            String columns = tableProperties.getProperty("__COLUMNS");
+            List<String> columns = getColumns(table);
             List<String> ids = getIdColumns(table);
 
-            final Table templateValue = new Table(tableName, columns, StringUtils.join(ids, ','));
+            final Table templateValue = new Table(tableName, columns, ids);
             scopes.put(table, templateValue);
             scopes.put("table" + (++i), templateValue);
         }
 
         Properties viewProperties = getViewProperties(view);
         String viewName = viewProperties.getProperty("__VIEW", view);
-        String viewColumns = viewProperties.getProperty("__COLUMNS");
+        String viewColumnsStr = viewProperties.getProperty("__COLUMNS");
+        List<String> viewColumns = Arrays.asList(StringUtils.split(viewColumnsStr, ","));
 
-        scopes.put("view", new Table(viewName, viewColumns, ""));
+        scopes.put("view", new Table(viewName, viewColumns, new ArrayList<>(0)));
 
         StringWriter writer = new StringWriter();
         MustacheFactory mf = new DefaultMustacheFactory();
@@ -212,10 +213,10 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
     static class Table {
 
         private final String name;
-        private final String columns;
-        private final String ids;
+        private final List<String> columns;
+        private final List<String> ids;
 
-        Table(String name, String columns, String ids) {
+        Table(String name, List<String> columns, List<String> ids) {
 
             this.name = name;
             this.columns = columns;
@@ -227,31 +228,30 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
         }
 
         public String getColumns() {
-            return columns;
+            return '"' + StringUtils.join(columns, "\",\"") + '"';
         }
 
         public String getIds() {
-            return ids;
+            return '"' + StringUtils.join(ids, "\",\"") + '"';
         }
 
         public String getQualifiedColumns() {
-            List<String> cols = Arrays.asList(columns.split(","));
-            cols.replaceAll(s -> name + "." + s);
+            List<String> cols = new ArrayList<>(columns);
+            cols.replaceAll(s -> name + ".\"" + s + "\"");
             return StringUtils.join(cols, ',');
         }
 
         public String getQualifiedColumnsNoId() {
-            List<String> cols = new ArrayList<>(Arrays.asList(columns.split(",")));
-            List<String> idList = Arrays.asList(ids.split(","));
-            cols.removeAll(idList);
-            cols.replaceAll(s -> name + "." + s);
+            List<String> cols = new ArrayList<>(columns);
+            cols.removeAll(ids);
+            cols.replaceAll(s -> name + ".\"" + s + "\"");
             return StringUtils.join(cols, ',');
         }
 
         public String getQualifiedId() {
-            List<String> cols = Arrays.asList(ids.split(","));
-            cols.replaceAll(s -> name + "." + s);
-            return StringUtils.join(cols, ',');
+            List<String> cols = new ArrayList<>(ids);
+            cols.replaceAll(s -> '"' + name + "." + s + '"');
+            return name + ".\"" + ids.get(0) + "\"";
         }
 
     }
