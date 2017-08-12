@@ -80,7 +80,8 @@ abstract class MipMigration implements JdbcMigration {
         List<String> ids = new ArrayList<>();
 
         for (String column: columns) {
-            if (columnsDef.getProperty(column + ".constraints", "").equals("is_index")) {
+            if (columnsDef.getProperty(column + ".constraints", "").equals("is_index") ||
+                columnsDef.getProperty(column + ".is_index", "").equals("true")) {
                 ids.add(column);
             }
         }
