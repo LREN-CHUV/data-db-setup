@@ -249,6 +249,9 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
         }
 
         public String getQualifiedId() {
+            if (ids.size() != 1) {
+                throw new IllegalStateException("Table " + name + " does not have one column used as id");
+            }
             List<String> cols = new ArrayList<>(ids);
             cols.replaceAll(s -> '"' + name + "." + s + '"');
             return name + ".\"" + ids.get(0) + "\"";
