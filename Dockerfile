@@ -23,7 +23,7 @@ RUN cp /usr/share/maven/ref/settings-docker.xml /root/.m2/settings.xml \
     && mvn clean package
 
 # Final image
-FROM hbpmip/flyway:4.2.0-4
+FROM hbpmip/flyway:4.2.0-5
 MAINTAINER Ludovic Claude <ludovic.claude@chuv.ch>
 
 ARG BUILD_DATE
