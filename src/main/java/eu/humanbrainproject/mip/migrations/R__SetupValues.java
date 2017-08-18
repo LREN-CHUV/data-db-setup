@@ -172,7 +172,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
         }
 
         if (!diff2table.isEmpty()) {
-            throw new IllegalArgumentException("Mismatch between CSV file headers and list of columns in the table: the following columns do not exist in the table '" +
+            throw new IllegalArgumentException("Mismatch between CSV file headers and list of columns in the table. The following columns do not exist in the table: " +
                     StringUtils.join(diff2table, ','));
         }
 
