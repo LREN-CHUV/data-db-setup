@@ -24,7 +24,15 @@ else
   DOCKER_COMPOSE="sudo docker-compose"
 fi
 
-trap '$DOCKER_COMPOSE rm -f' SIGINT SIGQUIT
+function _cleanup() {
+  local error_code="$?"
+  echo "Stopping the containers..."
+  $DOCKER_COMPOSE stop | true
+  $DOCKER_COMPOSE down | true
+  $DOCKER_COMPOSE rm -f > /dev/null 2> /dev/null | true
+  exit $error_code
+}
+trap _cleanup EXIT INT TERM
 
 $DOCKER_COMPOSE up -d data_db
 $DOCKER_COMPOSE build data_db_setup
@@ -49,6 +57,4 @@ $DOCKER_COMPOSE run data_db_setup_v2
 $DOCKER_COMPOSE run data_db_check_v2
 
 # Cleanup
-echo
-$DOCKER_COMPOSE stop
-$DOCKER_COMPOSE rm -f > /dev/null 2> /dev/null
+_cleanup
