@@ -24,4 +24,5 @@ COPY sql/V1_0__create.sql /flyway/sql/V1_0__create.sql
 COPY sql/V2_0__add_column.sql /flyway/sql/V2_0__add_column.sql
 COPY sql/data1-v2.csv sql/data2.csv /data/
 
-ENV DATASETS test1,test2
+ENV IMAGE=one-data \
+    DATASETS=test1,test2

@@ -19,7 +19,7 @@ if [ ! -z "$@" ]; then
     fi
 fi
 
-exec dockerize $DOCKERIZE_OPTS flyway $@ || {
+dockerize $DOCKERIZE_OPTS flyway $@ || {
   err=$?
   echo "Migration failed. It was using the following environment variables:"
   env | grep -v PASSWORD | grep -v PWD
