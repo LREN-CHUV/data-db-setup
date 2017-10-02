@@ -7,7 +7,7 @@
 
 This project uses Flyway to manage the database migration scripts for the research-grade data tables used by MIP.
 
-The research-grade data tables contain the following types of data:
+The research-grade data tables can contain the following types of data:
 
 * the features (values) for each Common Data Elements (CDE) defined by MIP.
 * the features extracted from research datasets (ADNI, PPMI...)
@@ -41,6 +41,43 @@ The following environment variables should be defined statically by child images
 * IMAGE: name of this Docker image, including version (for help message)
 * DATASETS: column-separated list of datasets to load.
 * VIEWS: column-separated list of views to create.
+
+This image is most likely going to be used as the parent image for a specialised image that installs a particular dataset.
+
+The Dockerfile for the specialised image should look like:
+
+Dockerfile
+```
+  # Recover the jar from the parent image
+  FROM hbpmip/data-db-setup:2.1.4 as parent-image
+
+  # Build stage for Java classes
+  FROM maven:3.5.0-jdk-8-alpine as build-java-env
+
+  COPY --from=parent-image /usr/share/jars/data-db-setup.jar /flyway/jars/
+  COPY src/main/java/ /project/src/
+
+  WORKDIR /project/src
+  RUN jar uvf /flyway/jars/data-db-setup.jar -C . .
+
+  # Final image
+  FROM hbpmip/data-db-setup:2.1.4
+
+  ARG BUILD_DATE
+  ARG VCS_REF
+  ARG VERSION
+
+  COPY --from=build-java-env /flyway/jars/data-db-setup.jar /flyway/jars/data-db-setup.jar
+  COPY sql/empty.csv /data/
+  COPY sql/V1_0__create.sql /flyway/sql/
+  COPY docker/run.sh /
+
+  RUN chmod +x /run.sh
+
+  ENV IMAGE=hbpmip/my-data-db-setup:1.0.0 \
+      DATASETS=empty
+
+```
 
 ## Build
 
