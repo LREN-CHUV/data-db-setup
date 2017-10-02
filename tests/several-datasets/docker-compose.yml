@@ -3,7 +3,7 @@ version: '2'
 services:
 
   data_db:
-    image: "postgres:9.6.3-alpine"
+    image: "postgres:9.6.5-alpine"
     container_name: "data-db"
     restart: unless-stopped
     environment:
