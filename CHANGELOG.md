@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 2.2.0 - Future
+
+* Support generating views but no datasets.
+
 ## 2.1.0 - 2017-08-10
 
 * Support multiple tables and datasets

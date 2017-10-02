@@ -41,6 +41,10 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
 
     public void migrate(Connection connection) throws Exception {
         String[] datasets = getDatasets();
+        if (datasets.length == 1 && "".equals(datasets[0])) {
+          LOG.info("No dataset defined, do not setup dataset values.");
+          return;
+        }
         try {
 
             connection.setAutoCommit(false);
