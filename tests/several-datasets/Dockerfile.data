@@ -1,6 +1,5 @@
-# Use the latest image built as this is what is under test
-
 # Recover the jar from the parent image
+# Use the latest image built as this is what is under test
 FROM hbpmip/data-db-setup as parent-image
 
 # Build stage for Java classes
@@ -13,6 +12,7 @@ WORKDIR /project/src
 RUN jar uvf /flyway/jars/data-db-setup.jar -C . .
 
 # Final image
+# Use the latest image built as this is what is under test
 FROM hbpmip/data-db-setup
 
 ARG BUILD_DATE

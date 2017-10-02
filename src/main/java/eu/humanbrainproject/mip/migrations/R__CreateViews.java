@@ -53,7 +53,6 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
             List<String> ids = getIdColumns(table);
 
             final Table templateValue = new Table(tableName, columns, ids);
-            scopes.put(table, templateValue);
             scopes.put("table" + (++i), templateValue);
         }
 
@@ -121,23 +120,23 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
     private InputStream getViewTemplateResource(String viewName) throws IOException {
         Properties viewProperties = getViewProperties(viewName);
-        String propertiesFile = viewProperties.getProperty("__SQL_TEMPLATE");
+        String sqlTemplateFile = viewProperties.getProperty("__SQL_TEMPLATE");
         InputStream viewTemplateResource;
 
-        if (propertiesFile != null) {
-            viewTemplateResource = getClass().getResourceAsStream(propertiesFile);
+        if (sqlTemplateFile != null) {
+            viewTemplateResource = getClass().getResourceAsStream(sqlTemplateFile);
         } else {
-            propertiesFile = (viewName == null) ? "view.mustache.sql" : viewName + "_view.mustache.sql";
-            viewTemplateResource = getClass().getResourceAsStream(propertiesFile);
+            sqlTemplateFile = (viewName == null) ? "view.mustache.sql" : viewName + "_view.mustache.sql";
+            viewTemplateResource = getClass().getResourceAsStream(sqlTemplateFile);
             if (viewTemplateResource == null && getViews().length == 1) {
-                propertiesFile = "view.mustache.sql";
-                viewTemplateResource = getClass().getResourceAsStream(propertiesFile);
+                sqlTemplateFile = "view.mustache.sql";
+                viewTemplateResource = getClass().getResourceAsStream(sqlTemplateFile);
             }
         }
         if (viewTemplateResource == null) {
             throw new IllegalStateException("Cannot load resource for view " + viewName + " from " +
                     getClass().getPackage().getName().replaceAll("\\.", "/") +
-                    "/" + propertiesFile + ". Check VIEWS environment variable and contents of the jar");
+                    "/" + sqlTemplateFile + ". Check VIEWS environment variable and contents of the jar");
         }
         return viewTemplateResource;
     }

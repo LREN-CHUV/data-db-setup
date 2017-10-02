@@ -1,6 +1,5 @@
-# Use the latest image built as this is what is under test
-
 # Recover the jar from the parent image
+# Use the latest image built as this is what is under test
 FROM hbpmip/data-db-setup as parent-image
 
 # Build stage for Java classes
@@ -13,6 +12,7 @@ WORKDIR /project/src
 RUN jar uvf /flyway/jars/data-db-setup.jar -C . .
 
 # Final image
+# Use the latest image built as this is what is under test
 FROM hbpmip/data-db-setup
 
 ARG BUILD_DATE
@@ -23,5 +23,5 @@ COPY --from=build-java-env /flyway/jars/data-db-setup.jar /flyway/jars/data-db-s
 COPY sql/V1_0__create.sql /flyway/sql/V1_0__create.sql
 COPY sql/data_A.csv sql/data_B.csv /data/
 
-ENV DATASETS testA,testB
-ENV VIEWS sample_union
+ENV DATASETS=testA,testB \
+    VIEWS=sample_union
