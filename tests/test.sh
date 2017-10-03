@@ -16,7 +16,7 @@ get_script_dir () {
 
 cd "$(get_script_dir)"
 
-#./one-dataset/test.sh
-#./several-datasets/test.sh
-#./joined-tables/test.sh
-#./union-of-tables/test.sh
+./one-dataset/test.sh
+./several-datasets/test.sh
+./joined-tables/test.sh
+./union-of-tables/test.sh
