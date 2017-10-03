@@ -83,10 +83,10 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
     private String[] getViews() {
         String viewsStr = System.getenv("VIEWS");
-        if (viewsStr == null) {
+        if (viewsStr == null || "".equals(viewsStr.trim())) {
             return new String[0];
         }
-        return viewsStr.split(",");
+        return viewsStr.trim().split(",");
     }
 
     private String[] getTables(String viewName) throws IOException {

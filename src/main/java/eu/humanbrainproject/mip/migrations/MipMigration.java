@@ -14,7 +14,7 @@ abstract class MipMigration implements JdbcMigration {
 
     String[] getDatasets() {
         String datasetsStr = System.getenv("DATASETS");
-        if (datasetsStr == null) {
+        if (datasetsStr == null || "".equals(datasetsStr.trim())) {
             return new String[0];
         }
         return datasetsStr.trim().split(",");
