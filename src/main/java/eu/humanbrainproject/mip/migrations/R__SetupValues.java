@@ -42,7 +42,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
     public void migrate(Connection connection) throws Exception {
         String[] datasets = getDatasets();
         if (datasets.length == 1 && "".equals(datasets[0])) {
-          LOG.info("No dataset defined, do not setup dataset values.");
+          LOG.info("No dataset defined, we will not setup dataset values.");
           return;
         }
         try {
@@ -50,6 +50,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
             connection.setAutoCommit(false);
 
             for (String dataset: datasets) {
+                LOG.info("Migrating dataset " + dataset + "...");
                 loadDataset(connection, dataset);
             }
 

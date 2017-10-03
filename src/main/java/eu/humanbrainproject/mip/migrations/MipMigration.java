@@ -15,9 +15,9 @@ abstract class MipMigration implements JdbcMigration {
     String[] getDatasets() {
         String datasetsStr = System.getenv("DATASETS");
         if (datasetsStr == null) {
-            datasetsStr = "default";
+            return new String[0];
         }
-        return datasetsStr.split(",");
+        return datasetsStr.trim().split(",");
     }
 
     Properties getDatasetProperties(String datasetName) throws IOException {

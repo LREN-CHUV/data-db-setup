@@ -31,6 +31,7 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
             connection.setAutoCommit(false);
 
             for (String view: views) {
+                LOG.info("Creating view " + view + "...");
                 createView(connection, view);
             }
 
