@@ -47,7 +47,7 @@ This image is most likely going to be used as the parent image for a specialised
 The Dockerfile for the specialised image should look like:
 
 Dockerfile
-```
+```dockerfile
   # Recover the jar from the parent image
   FROM hbpmip/data-db-setup:2.1.9 as parent-image
 
