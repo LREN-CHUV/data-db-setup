@@ -1,5 +1,5 @@
 # Build stage for Java classes
-FROM maven:3.5.0-jdk-8-alpine as build-java-env
+FROM maven:3.5.2-jdk-8-alpine as build-java-env
 
 ENV HOME=/root
 COPY docker/seed-src /project/docker/seed-src
