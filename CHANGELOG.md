@@ -1,7 +1,7 @@
 
 # Changelog
 
-## 2.2.0 - Future
+## 2.2.0 - 2018-05-02
 
 * Support generating views but no datasets.
 
