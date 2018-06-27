@@ -58,6 +58,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
 
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Cannot migrate data", e);
+            LOG.log(Level.SEVERE, "Caused by", e.getCause());
             throw e;
         }
     }
