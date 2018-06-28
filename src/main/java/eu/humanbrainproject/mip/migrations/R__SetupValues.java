@@ -58,10 +58,14 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
 
         } catch (java.sql.BatchUpdateException e) {
             LOG.log(Level.SEVERE, "Cannot migrate data", e);
-            LOG.log(Level.SEVERE, "Caused by", e.getNextException());
+            if (e.getNextException() != null) {
+                LOG.log(Level.SEVERE, "Caused by", e.getNextException());
+            }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Cannot migrate data", e);
-            LOG.log(Level.SEVERE, "Caused by", e.getCause());
+            if (e.getCause() != null) {
+                LOG.log(Level.SEVERE, "Caused by", e.getCause());
+            }
             throw e;
         }
     }
