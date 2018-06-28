@@ -49,13 +49,16 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
 
             connection.setAutoCommit(false);
 
-            for (String dataset: datasets) {
+            for (String dataset : datasets) {
                 LOG.info("Migrating dataset " + dataset + "...");
                 loadDataset(connection, dataset);
             }
 
             connection.commit();
 
+        } catch (java.sql.BatchUpdateException e) {
+            LOG.log(Level.SEVERE, "Cannot migrate data", e);
+            LOG.log(Level.SEVERE, "Caused by", e.getNextException());
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Cannot migrate data", e);
             LOG.log(Level.SEVERE, "Caused by", e.getCause());
