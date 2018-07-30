@@ -6,6 +6,7 @@ import org.flywaydb.core.api.migration.MigrationInfoProvider;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 import org.flywaydb.core.api.migration.MigrationChecksumProvider;
 import org.supercsv.cellprocessor.Optional;
+import org.supercsv.cellprocessor.ParseDate;
 import org.supercsv.cellprocessor.ParseDouble;
 import org.supercsv.cellprocessor.ParseInt;
 import org.supercsv.cellprocessor.constraint.UniqueHashCode;
@@ -20,10 +21,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import java.io.IOException;
 import java.util.zip.CRC32;
@@ -34,9 +35,9 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
     private static final Logger LOG = Logger.getLogger("Setup values");
 
     private static final String SQL_INSERT = "INSERT INTO ${table}(${keys}) VALUES(${values})";
-    private static final String TABLE_REGEX = "\\$\\{table\\}";
-    private static final String KEYS_REGEX = "\\$\\{keys\\}";
-    private static final String VALUES_REGEX = "\\$\\{values\\}";
+    private static final String TABLE_REGEX = "\\$\\{table}";
+    private static final String KEYS_REGEX = "\\$\\{keys}";
+    private static final String VALUES_REGEX = "\\$\\{values}";
     private static final int BATCH_SIZE = 1000;
 
     public void migrate(Connection connection) throws Exception {
@@ -190,13 +191,14 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
         }
 
         // Use the list of columns from the CSV header as the source of truth, this is what will be used by SuperCSV
-        List<CellProcessor> processors = csvColumns.stream().map(column -> {
+
+        return csvColumns.stream().map(column -> {
             String colType = shortType(columnsDef.getProperty(column + ".type", "?"));
             if (columnsDef.getProperty(column + ".constraints", "").equals("is_index")) {
                 if ("int".equals(colType)) {
-                   return new ParseInt();
+                    return new ParseInt();
                 } else {
-                   return new UniqueHashCode();
+                    return new UniqueHashCode();
                 }
             } else {
                 switch (colType) {
@@ -204,18 +206,23 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
                         return new Optional();
                     case "varchar":
                         return new Optional();
+                    case "text":
+                        return new Optional();
                     case "numeric":
                         return new Optional(new ParseDouble());
                     case "int":
+                    case "integer":
                         return new Optional(new ParseInt());
+                    case "date":
+                        return new Optional(new ParseDate(DateTimeFormatter.ISO_DATE.toString()));
+                    case "timestamp":
+                        return new Optional(new ParseDate(DateTimeFormatter.ISO_DATE_TIME.toString()));
                     default:
                         throw new IllegalArgumentException("Unknown type " + colType + " on column " + column);
                 }
             }
 
-        }).collect(Collectors.toList());
-
-        return processors.toArray(new CellProcessor[processors.size()]);
+        }).toArray(CellProcessor[]::new);
     }
 
     private static int getSqlType(String sqlType) {
@@ -224,10 +231,17 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
                 return Types.CHAR;
             case "varchar":
                 return Types.VARCHAR;
+            case "text":
+                return Types.CLOB;
             case "int":
+            case "integer":
                 return Types.INTEGER;
             case "numeric":
                 return Types.NUMERIC;
+            case "date":
+                return Types.DATE;
+            case "timestamp":
+                return Types.TIMESTAMP;
             default:
                 throw new IllegalArgumentException("Unknown SQL type: " + sqlType);
         }
