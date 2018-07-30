@@ -79,6 +79,10 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
         if (tableName == null) {
             throw new IllegalArgumentException("__TABLE properties is not defined for dataset " + datasetName);
         }
+        if (csvFileName.equals("/dev/null")) {
+            LOG.warning("No data will be loaded in dataset " + datasetName);
+            return;
+        }
 
         final Properties columns = getColumnsProperties(tableName);
         final String deleteSql = dataset.getProperty("__DELETE_SQL", "DELETE FROM " + tableName)

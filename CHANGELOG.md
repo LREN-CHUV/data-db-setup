@@ -1,6 +1,11 @@
 
 # Changelog
 
+## 2.3.0 - 2018-07-30
+
+* Support new column types: text, date, timestamp
+* Allow loading no data for a dataset, by setting property __CSV_FILE to /dev/null value
+
 ## 2.2.0 - 2018-05-02
 
 * Support generating views but no datasets.
