@@ -1,16 +1,3 @@
-# Recover the jar from the parent image
-# Use the latest image built as this is what is under test
-FROM hbpmip/data-db-setup as parent-image
-
-# Build stage for Java classes
-FROM maven:3.5.2-jdk-8-alpine as build-java-env
-
-COPY --from=parent-image /usr/share/jars/data-db-setup.jar /flyway/jars/
-COPY src-v2/main/java/ /project/src/
-
-WORKDIR /project/src
-RUN jar uvf /flyway/jars/data-db-setup.jar -C . .
-
 # Final image
 # Use the latest image built as this is what is under test
 FROM hbpmip/data-db-setup
@@ -19,7 +6,7 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION
 
-COPY --from=build-java-env /flyway/jars/data-db-setup.jar /flyway/jars/data-db-setup.jar
+COPY config-v2/ /flyway/config/
 COPY sql/V1_0__create.sql /flyway/sql/V1_0__create.sql
 COPY sql/V2_0__add_column.sql /flyway/sql/V2_0__add_column.sql
 COPY sql/data-v2.csv /data/

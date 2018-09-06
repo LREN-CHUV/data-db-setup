@@ -111,40 +111,31 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
     private InputStream getViewResource(String viewName) {
         String propertiesFile = (viewName == null) ? "view.properties" : viewName + "_view.properties";
-        InputStream viewResource = getClass().getResourceAsStream(propertiesFile);
-        if (viewResource == null && getViews().length == 1) {
+        if (!existsConfigResource(propertiesFile) && getViews().length == 1) {
             propertiesFile = "view.properties" ;
-            viewResource = getClass().getResourceAsStream(propertiesFile);
         }
-        if (viewResource == null) {
-            throw new IllegalStateException("Cannot load resource for view " + viewName + " from " +
-                    getClass().getPackage().getName().replaceAll("\\.", "/") +
-                    "/" + propertiesFile + ". Check VIEWS environment variable and contents of the jar");
+        if (!existsConfigResource(propertiesFile)) {
+            throw new IllegalStateException("Cannot load resource for view " + viewName + " from /config/" +
+                    propertiesFile + ". Check VIEWS environment variable and contents of the jar");
         }
-        return viewResource;
+        return getConfigResource(propertiesFile);
     }
 
     private InputStream getViewTemplateResource(String viewName) throws IOException {
         Properties viewProperties = getViewProperties(viewName);
         String sqlTemplateFile = viewProperties.getProperty("__SQL_TEMPLATE");
-        InputStream viewTemplateResource;
 
-        if (sqlTemplateFile != null) {
-            viewTemplateResource = getClass().getResourceAsStream(sqlTemplateFile);
-        } else {
+        if (sqlTemplateFile == null) {
             sqlTemplateFile = (viewName == null) ? "view.mustache.sql" : viewName + "_view.mustache.sql";
-            viewTemplateResource = getClass().getResourceAsStream(sqlTemplateFile);
-            if (viewTemplateResource == null && getViews().length == 1) {
+            if (!existsConfigResource(sqlTemplateFile) && getViews().length == 1) {
                 sqlTemplateFile = "view.mustache.sql";
-                viewTemplateResource = getClass().getResourceAsStream(sqlTemplateFile);
             }
         }
-        if (viewTemplateResource == null) {
-            throw new IllegalStateException("Cannot load resource for view " + viewName + " from " +
-                    getClass().getPackage().getName().replaceAll("\\.", "/") +
-                    "/" + sqlTemplateFile + ". Check VIEWS environment variable and contents of the jar");
+        if (!existsConfigResource(sqlTemplateFile)) {
+            throw new IllegalStateException("Cannot load resource for view " + viewName + " from /config/" +
+                    sqlTemplateFile + ". Check VIEWS environment variable and contents of the jar");
         }
-        return viewTemplateResource;
+        return getConfigResource(sqlTemplateFile);
     }
 
     @Override

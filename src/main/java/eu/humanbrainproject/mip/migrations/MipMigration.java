@@ -3,8 +3,7 @@ package eu.humanbrainproject.mip.migrations;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 
 abstract class MipMigration implements JdbcMigration {
@@ -33,13 +32,11 @@ abstract class MipMigration implements JdbcMigration {
 
     InputStream getDatasetResource(String datasetName) {
         String propertiesFile = (datasetName == null) ? "dataset.properties" : datasetName + "_dataset.properties";
-        InputStream datasetResource = getClass().getResourceAsStream(propertiesFile);
-        if (datasetResource == null) {
-            throw new IllegalStateException("Cannot load resource from /" +
-                    getClass().getPackage().getName().replaceAll("\\.", "/") +
-                    "/" + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
+        if (!existsConfigResource(propertiesFile)) {
+            throw new IllegalStateException("Cannot load resource from /config/" + propertiesFile +
+              ". Check DATASETS environment variable and contents of the jar");
         }
-        return datasetResource;
+        return getConfigResource(propertiesFile);
     }
 
     Properties getColumnsProperties(String tableName) throws IOException {
@@ -55,21 +52,18 @@ abstract class MipMigration implements JdbcMigration {
 
     InputStream getColumnsResource(String tableName) {
         String propertiesFile = (tableName == null) ? "columns.properties" : tableName.toLowerCase() + "_columns.properties";
-        InputStream datasetResource = getClass().getResourceAsStream(propertiesFile);
-        if (datasetResource == null && getDatasets().length == 1) {
-            String firstTry = propertiesFile;
-            propertiesFile = "columns.properties";
-            datasetResource = getClass().getResourceAsStream(propertiesFile);
-            if (datasetResource == null) {
-              propertiesFile = firstTry;
+
+        if (!existsConfigResource(propertiesFile) && getDatasets().length == 1) {
+            if (existsConfigResource("columns.properties")) {
+                propertiesFile = "columns.properties";
             }
         }
-        if (datasetResource == null) {
-            throw new IllegalStateException("Cannot load resource from /" +
-                    getClass().getPackage().getName().replaceAll("\\.", "/") +
-                    "/" + propertiesFile + ". Check DATASETS environment variable and contents of the jar");
+
+        if (!existsConfigResource(propertiesFile)) {
+            throw new IllegalStateException("Cannot load resource from /config/" + propertiesFile +
+              ". Check DATASETS environment variable and contents of the jar");
         }
-        return datasetResource;
+        return getConfigResource(propertiesFile);
     }
 
     List<String> getColumns(String tableName) throws IOException {
@@ -92,4 +86,26 @@ abstract class MipMigration implements JdbcMigration {
         return ids;
     }
 
+    boolean existsConfigResource(String name) {
+        if (getClass().getResource(name) != null) {
+            return true;
+        }
+
+        final File configFile = new File("/flyway/config/" + name );
+
+        return configFile.canRead();
+    }
+
+    InputStream getConfigResource(String name) {
+        if (getClass().getResource(name) != null) {
+            return getClass().getResourceAsStream(name);
+        }
+
+        final File configFile = new File("/flyway/config/" + name );
+        try {
+            return new FileInputStream(configFile);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("Cannot read file /flyway/config/" + name);
+        }
+    }
 }

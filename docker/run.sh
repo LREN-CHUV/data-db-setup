@@ -21,6 +21,8 @@ if [ ! -z "$@" ]; then
     fi
 fi
 
+FLYWAY_OPTS="$FLYWAY_OPTS -jarDirs=/flyway/jars"
+
 dockerize $DOCKERIZE_OPTS flyway $FLYWAY_OPTS $@|| {
   err=$?
   echo "Migration failed. It was using the following environment variables:"
