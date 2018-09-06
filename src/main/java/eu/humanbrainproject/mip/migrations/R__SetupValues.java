@@ -40,6 +40,11 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
     private static final String VALUES_REGEX = "\\$\\{values}";
     private static final int BATCH_SIZE = 1000;
 
+    @Override
+    public boolean isUndo() {
+        return false;
+    }
+
     public void migrate(Connection connection) throws Exception {
         String[] datasets = getDatasets();
         if (datasets.length == 1 && "".equals(datasets[0])) {

@@ -24,6 +24,11 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
     private final Map<String, Properties> viewProperties = new HashMap<>();
 
+    @Override
+    public boolean isUndo() {
+        return false;
+    }
+
     public void migrate(Connection connection) throws Exception {
         String[] views = getViews();
         try {
