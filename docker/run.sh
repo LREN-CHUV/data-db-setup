@@ -21,9 +21,9 @@ if [ ! -z "$@" ]; then
     fi
 fi
 
-FLYWAY_OPTS="$FLYWAY_OPTS -jarDirs=/flyway/jars"
+FLYWAY_OPTS="$FLYWAY_OPTS -locations=filesystem:/flyway/sql,classpath:eu/humanbrainproject/mip/migrations -jarDirs=/flyway/jars"
 
-dockerize $DOCKERIZE_OPTS flyway $FLYWAY_OPTS $@|| {
+dockerize $DOCKERIZE_OPTS flyway $FLYWAY_OPTS $@ || {
   err=$?
   echo "Migration failed. It was using the following environment variables:"
   env | grep -v PASSWORD | grep -v PWD

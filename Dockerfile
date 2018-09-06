@@ -35,7 +35,7 @@ COPY --from=build-java-env \
         /usr/share/maven/ref/repository/net/sf/supercsv/super-csv/2.4.0/super-csv-2.4.0.jar \
         /usr/share/maven/ref/repository/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar \
         /usr/share/maven/ref/repository/com/github/spullara/mustache/java/compiler/0.9.5/compiler-0.9.5.jar \
-        /flyway/jars/
+        /flyway/lib/
 COPY docker/run.sh /
 
 RUN chmod +x /run.sh
@@ -46,8 +46,7 @@ ENV FLYWAY_DBMS=postgresql \
     FLYWAY_DATABASE_NAME=data \
     FLYWAY_USER=data \
     FLYWAY_PASSWORD=data \
-    FLYWAY_SCHEMAS=public \
-    FLYWAY_MIGRATION_PACKAGE="eu/humanbrainproject/mip/migrations/values,eu/humanbrainproject/mip/migrations/views"
+    FLYWAY_SCHEMAS=public
 
 ENV IMAGE="hbpmip/data-db-setup:$VERSION"
 
