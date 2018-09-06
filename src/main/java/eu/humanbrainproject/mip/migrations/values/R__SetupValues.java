@@ -1,5 +1,6 @@
-package eu.humanbrainproject.mip.migrations;
+package eu.humanbrainproject.mip.migrations.values;
 
+import eu.humanbrainproject.mip.migrations.MipMigration;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.migration.MigrationInfoProvider;

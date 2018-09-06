@@ -6,12 +6,12 @@ import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 import java.io.*;
 import java.util.*;
 
-abstract class MipMigration implements JdbcMigration {
+public abstract class MipMigration implements JdbcMigration {
 
     private final Map<String, Properties> tableColumns = new HashMap<>();
     private final Map<String, Properties> datasetProperties = new HashMap<>();
 
-    String[] getDatasets() {
+    protected String[] getDatasets() {
         String datasetsStr = System.getenv("DATASETS");
         if (datasetsStr == null || "".equals(datasetsStr.trim())) {
             return new String[0];
@@ -19,7 +19,7 @@ abstract class MipMigration implements JdbcMigration {
         return datasetsStr.trim().split(",");
     }
 
-    Properties getDatasetProperties(String datasetName) throws IOException {
+    protected Properties getDatasetProperties(String datasetName) throws IOException {
         Properties datasetProperties = this.datasetProperties.get(datasetName);
         if (datasetProperties == null) {
             datasetProperties = new Properties();
@@ -30,7 +30,7 @@ abstract class MipMigration implements JdbcMigration {
         return datasetProperties;
     }
 
-    InputStream getDatasetResource(String datasetName) {
+    protected InputStream getDatasetResource(String datasetName) {
         String propertiesFile = (datasetName == null) ? "dataset.properties" : datasetName + "_dataset.properties";
         if (!existsConfigResource(propertiesFile)) {
             throw new IllegalStateException("Cannot load resource from /config/" + propertiesFile +
@@ -39,7 +39,7 @@ abstract class MipMigration implements JdbcMigration {
         return getConfigResource(propertiesFile);
     }
 
-    Properties getColumnsProperties(String tableName) throws IOException {
+    protected Properties getColumnsProperties(String tableName) throws IOException {
         Properties columnsProperties = tableColumns.get(tableName);
         if (columnsProperties == null) {
             columnsProperties = new Properties();
@@ -50,7 +50,7 @@ abstract class MipMigration implements JdbcMigration {
         return columnsProperties;
     }
 
-    InputStream getColumnsResource(String tableName) {
+    protected InputStream getColumnsResource(String tableName) {
         String propertiesFile = (tableName == null) ? "columns.properties" : tableName.toLowerCase() + "_columns.properties";
 
         if (!existsConfigResource(propertiesFile) && getDatasets().length == 1) {
@@ -66,13 +66,13 @@ abstract class MipMigration implements JdbcMigration {
         return getConfigResource(propertiesFile);
     }
 
-    List<String> getColumns(String tableName) throws IOException {
+    protected List<String> getColumns(String tableName) throws IOException {
         Properties columnsDef = getColumnsProperties(tableName);
         String columnsStr = columnsDef.getProperty("__COLUMNS");
         return Arrays.asList(StringUtils.split(columnsStr, ","));
     }
 
-    List<String> getIdColumns(String tableName) throws IOException {
+    protected List<String> getIdColumns(String tableName) throws IOException {
         Properties columnsDef = getColumnsProperties(tableName);
         List<String> columns = getColumns(tableName);
         List<String> ids = new ArrayList<>();
@@ -86,7 +86,7 @@ abstract class MipMigration implements JdbcMigration {
         return ids;
     }
 
-    boolean existsConfigResource(String name) {
+    protected boolean existsConfigResource(String name) {
         if (getClass().getResource(name) != null) {
             return true;
         }
@@ -96,7 +96,7 @@ abstract class MipMigration implements JdbcMigration {
         return configFile.canRead();
     }
 
-    InputStream getConfigResource(String name) {
+    protected InputStream getConfigResource(String name) {
         if (getClass().getResource(name) != null) {
             return getClass().getResourceAsStream(name);
         }
