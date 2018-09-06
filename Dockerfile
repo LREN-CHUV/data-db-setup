@@ -52,11 +52,12 @@ ENV FLYWAY_DBMS=postgresql \
 ENV IMAGE="hbpmip/data-db-setup:$VERSION"
 
 WORKDIR /flyway
+ENTRYPOINT ["/run.sh"]
 CMD ["migrate"]
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.name="hbpmip/data-db-setup" \
-      org.label-schema.description="Base image for research database setup and loading data" \
+      org.label-schema.description="Base image to setup research database and load data" \
       org.label-schema.url="https://github.com/LREN-CHUV/data-db-setup" \
       org.label-schema.vcs-type="git" \
       org.label-schema.vcs-url="https://github.com/LREN-CHUV/data-db-setup" \

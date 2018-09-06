@@ -6,3 +6,7 @@
     - id: check-merge-conflict
     - id: check-added-large-files
     - id: check-yaml
+    - id: check-json
+    - id: pretty-format-json
+      args: ["--autofix"]
+      exclude: slack.json
