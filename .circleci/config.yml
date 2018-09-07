@@ -41,3 +41,7 @@ jobs:
           name: "Test creating a view for a union of tables"
           command: |
             PATH=$PATH:/$HOME/.captain/bin/ ./tests/union-of-tables/test.sh
+
+notify:
+  webhooks:
+    - url: https://webhook.atomist.com/atomist/circle/teams/T233KRG4R
