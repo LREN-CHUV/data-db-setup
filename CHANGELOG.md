@@ -1,10 +1,15 @@
 
 # Changelog
 
+## 2.4.0 - 2018-09-07
+
+* Configuration is now stored in folder /flyway/config/ inside the Docker image
+* Update flyway to 5.1.4
+
 ## 2.3.0 - 2018-07-30
 
 * Support new column types: text, date, timestamp
-* Allow loading no data for a dataset, by setting property __CSV_FILE to /dev/null value
+* Allow loading no data for a dataset, by setting property \_\_CSV_FILE to /dev/null value
 
 ## 2.2.0 - 2018-05-02
 
