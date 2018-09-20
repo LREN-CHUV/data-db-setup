@@ -1,11 +1,6 @@
 package eu.humanbrainproject.mip.migrations.values;
 
-import eu.humanbrainproject.mip.migrations.MipMigration;
 import org.apache.commons.lang3.StringUtils;
-import org.flywaydb.core.api.MigrationVersion;
-import org.flywaydb.core.api.migration.MigrationInfoProvider;
-import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
-import org.flywaydb.core.api.migration.MigrationChecksumProvider;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ParseDate;
 import org.supercsv.cellprocessor.ParseDouble;
@@ -17,7 +12,6 @@ import org.supercsv.io.ICsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
 import java.io.FileReader;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -28,10 +22,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import java.io.IOException;
-import java.util.zip.CRC32;
 
 @SuppressWarnings("unused")
-public class R__SetupValues extends MipMigration implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
+public class R__SetupValues extends AbstractDatasetSetup {
 
     private static final Logger LOG = Logger.getLogger("Setup values");
 
@@ -44,37 +37,6 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
     @Override
     public boolean isUndo() {
         return false;
-    }
-
-    public void migrate(Connection connection) throws Exception {
-        String[] datasets = getDatasets();
-        if (datasets.length == 1 && "".equals(datasets[0])) {
-          LOG.info("No dataset defined, we will not setup dataset values.");
-          return;
-        }
-        try {
-
-            connection.setAutoCommit(false);
-
-            for (String dataset : datasets) {
-                LOG.info("Migrating dataset " + dataset + "...");
-                loadDataset(connection, dataset);
-            }
-
-            connection.commit();
-
-        } catch (java.sql.BatchUpdateException e) {
-            LOG.log(Level.SEVERE, "Cannot migrate data", e);
-            if (e.getNextException() != null) {
-                LOG.log(Level.SEVERE, "Caused by", e.getNextException());
-            }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Cannot migrate data", e);
-            if (e.getCause() != null) {
-                LOG.log(Level.SEVERE, "Caused by", e.getCause());
-            }
-            throw e;
-        }
     }
 
     private void loadDataset(Connection connection, String datasetName) throws IOException, SQLException {
@@ -131,26 +93,26 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
                                 case Types.CHAR:
                                 case Types.VARCHAR:
                                     if (v instanceof String) {
-                                      statement.setString(index, (String) v);
+                                        statement.setString(index, (String) v);
                                     } else {
-                                      LOG.severe("On column " + column + ", String value expected, found " + v.getClass());
-                                      throw new IllegalArgumentException("On column " + column + ", String value expected, found " + v.getClass());
+                                        LOG.severe("On column " + column + ", String value expected, found " + v.getClass());
+                                        throw new IllegalArgumentException("On column " + column + ", String value expected, found " + v.getClass());
                                     }
                                     break;
                                 case Types.INTEGER:
                                     if (v instanceof Integer) {
-                                      statement.setInt(index, (Integer) v);
+                                        statement.setInt(index, (Integer) v);
                                     } else {
-                                      LOG.severe("On column " + column + ", Integer value expected, found " + v.getClass());
-                                      throw new IllegalArgumentException("On column " + column + ", Integer value expected, found " + v.getClass());
+                                        LOG.severe("On column " + column + ", Integer value expected, found " + v.getClass());
+                                        throw new IllegalArgumentException("On column " + column + ", Integer value expected, found " + v.getClass());
                                     }
                                     break;
                                 case Types.NUMERIC:
                                     if (v instanceof Double) {
-                                      statement.setDouble(index, (Double) v);
+                                        statement.setDouble(index, (Double) v);
                                     } else {
-                                      LOG.severe("On column " + column + ", Double value expected, found " + v.getClass());
-                                      throw new IllegalArgumentException("On column " + column + ", Double value expected, found " + v.getClass());
+                                        LOG.severe("On column " + column + ", Double value expected, found " + v.getClass());
+                                        throw new IllegalArgumentException("On column " + column + ", Double value expected, found " + v.getClass());
                                     }
                                     break;
                                 default:
@@ -190,7 +152,7 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
         diff2table.removeAll(columns);
 
         if (!diff2csv.isEmpty()) {
-            for (String column: diff2csv) {
+            for (String column : diff2csv) {
                 LOG.warning("Column " + column + " is defined in the table but not in CSV file");
             }
         }
@@ -262,44 +224,8 @@ public class R__SetupValues extends MipMigration implements JdbcMigration, Migra
     }
 
     @Override
-    public Integer getChecksum() {
-        int checksum = 0;
-        for (String dataset: getDatasets()) {
-            checksum += computeChecksum(dataset);
-        }
-        return checksum;
+    protected Logger getLogger() {
+        return LOG;
     }
 
-    private int computeChecksum(String dataset) {
-        final CRC32 crc32 = new CRC32();
-
-        // Use the name of the dataset
-        byte[] bytes = dataset.getBytes();
-        crc32.update(bytes, 0, bytes.length);
-
-        // Use the values in the dataset
-        InputStream datasetResource = getDatasetResource(dataset);
-        byte[] data = new byte[1024];
-        int read;
-        try {
-            while ((read = datasetResource.read(data)) > 0) {
-                crc32.update(data, 0, read);
-            }
-        } catch (IOException e) {
-            LOG.log(Level.WARNING, "Cannot read data from " + dataset + "_dataset.properties", e);
-        }
-
-        return (int) crc32.getValue();
-    }
-
-    @Override
-    public MigrationVersion getVersion() {
-        return null;
-    }
-
-    @Override
-    public String getDescription() {
-        String[] datasets = getDatasets();
-        return "Setup dataset" + (datasets.length > 1 ? "s " : " ") + StringUtils.join(datasets, ',');
-    }
 }

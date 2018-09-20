@@ -1,0 +1,23 @@
+FROM python:3.6.6-alpine3.8
+
+RUN apk add --no-cache python3-dev build-base
+RUN pip3 install goodtables
+
+COPY v1/ data/
+WORKDIR /data
+
+RUN goodtables validate datapackage.json
+
+# Final image
+# Use the latest image built as this is what is under test
+FROM hbpmip/data-db-setup
+
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+
+COPY sql/V1_0__create.sql /flyway/sql/V1_0__create.sql
+COPY v1/ /flyway/config/
+
+ENV IMAGE=one-data \
+    DATAPACKAGE=/data/datapackage.json
