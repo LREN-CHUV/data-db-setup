@@ -65,7 +65,7 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
         Properties viewProperties = getViewProperties(view);
         String viewName = viewProperties.getProperty("__VIEW", view);
-        String viewColumnsStr = viewProperties.getProperty("__COLUMNS");
+        String viewColumnsStr = viewProperties.getProperty("__COLUMNS", "");
         List<String> viewColumns = Arrays.asList(StringUtils.split(viewColumnsStr, ","));
 
         scopes.put("view", new Table(viewName, viewColumns, new ArrayList<>(0)));
@@ -226,6 +226,12 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
         public String getColumns() {
             return '"' + StringUtils.join(columns, "\",\"") + '"';
+        }
+
+        public String getColumnsNoId() {
+            List<String> cols = new ArrayList<>(columns);
+            cols.removeAll(ids);
+            return '"' + StringUtils.join(cols, "\",\"") + '"';
         }
 
         public String getIds() {
