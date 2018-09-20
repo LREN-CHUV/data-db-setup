@@ -21,7 +21,7 @@ public abstract class MipMigration implements JdbcMigration {
         if (datapackage == null && datapackageStr != null && !datapackageStr.isEmpty()) {
             ObjectMapper mapper = new ObjectMapper();
             if (!existsDataResource(datapackageStr)) {
-                throw new IllegalStateException("Cannot load data package descriptor from /data/" + datapackageStr +
+                throw new IllegalStateException("Cannot load data package descriptor from " + getDataResourcePath(datapackageStr) +
                         ". Check DATAPACKAGE environment variable and contents of the Docker image");
             }
             try {
@@ -60,7 +60,7 @@ public abstract class MipMigration implements JdbcMigration {
         if (getDatapackage() != null) {
             String path = getDatapackage().getResource(datasetName).getPath();
             if (!existsDataResource(path)) {
-                throw new IllegalStateException("Cannot load resource from /data/" + path +
+                throw new IllegalStateException("Cannot load resource from " + getDataResourcePath(path) +
                         ". Check datapackage.json descriptor and contents of the Docker image");
             }
             return getDataResource(path);
@@ -68,7 +68,7 @@ public abstract class MipMigration implements JdbcMigration {
 
         String propertiesFile = (datasetName == null) ? "dataset.properties" : datasetName + "_dataset.properties";
         if (!existsConfigResource(propertiesFile)) {
-            throw new IllegalStateException("Cannot load resource from /config/" + propertiesFile +
+            throw new IllegalStateException("Cannot load resource from " + getConfigResourcePath(propertiesFile) +
                     ". Check DATASETS environment variable and contents of the Docker image");
         }
         return getConfigResource(propertiesFile);
@@ -95,7 +95,7 @@ public abstract class MipMigration implements JdbcMigration {
         }
 
         if (!existsConfigResource(propertiesFile)) {
-            throw new IllegalStateException("Cannot load resource from /config/" + propertiesFile +
+            throw new IllegalStateException("Cannot load resource from " + getConfigResourcePath(propertiesFile) +
                     ". Check DATASETS environment variable and contents of the Docker image");
         }
         return getConfigResource(propertiesFile);
@@ -121,12 +121,19 @@ public abstract class MipMigration implements JdbcMigration {
         return ids;
     }
 
+    protected String getConfigResourcePath(String path) {
+        if (!path.startsWith("/")) {
+            return "/flyway/config/" + path;
+        }
+        return path;
+    }
+
     protected boolean existsConfigResource(String name) {
         if (getClass().getResource(name) != null) {
             return true;
         }
 
-        final File configFile = new File("/flyway/config/" + name);
+        final File configFile = new File(getConfigResourcePath(name));
 
         return configFile.canRead();
     }
@@ -136,12 +143,19 @@ public abstract class MipMigration implements JdbcMigration {
             return getClass().getResourceAsStream(name);
         }
 
-        final File configFile = new File("/flyway/config/" + name);
+        final File configFile = new File(getConfigResourcePath(name));
         try {
             return new FileInputStream(configFile);
         } catch (FileNotFoundException e) {
-            throw new RuntimeException("Cannot read file /flyway/config/" + name);
+            throw new RuntimeException("Cannot read file " + configFile.getAbsolutePath());
         }
+    }
+
+    protected String getDataResourcePath(String path) {
+        if (!path.startsWith("/")) {
+            return "/data/" + path;
+        }
+        return path;
     }
 
     protected boolean existsDataResource(String name) {
@@ -149,11 +163,7 @@ public abstract class MipMigration implements JdbcMigration {
             return true;
         }
 
-        if (!name.startsWith("/")) {
-            name = "/data" + name;
-        }
-
-        final File dataFile = new File(name);
+        final File dataFile = new File(getDataResourcePath(name));
 
         return dataFile.canRead();
     }
@@ -163,15 +173,11 @@ public abstract class MipMigration implements JdbcMigration {
             return getClass().getResourceAsStream(name);
         }
 
-        if (!name.startsWith("/")) {
-            name = "/data" + name;
-        }
-
-        final File dataFile = new File(name);
+        final File dataFile = new File(getDataResourcePath(name));
         try {
             return new FileInputStream(dataFile);
         } catch (FileNotFoundException e) {
-            throw new RuntimeException("Cannot read file " + name);
+            throw new RuntimeException("Cannot read file " + dataFile.getAbsolutePath());
         }
     }
 
