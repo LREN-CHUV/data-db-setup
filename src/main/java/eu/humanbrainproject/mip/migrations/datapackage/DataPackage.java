@@ -1,10 +1,15 @@
 package eu.humanbrainproject.mip.migrations.datapackage;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
-public class Datapackage {
+@SuppressWarnings("unused")
+public class DataPackage {
 
     private String name;
     private String description;
@@ -61,5 +66,14 @@ public class Datapackage {
             }
         }
         throw new IllegalArgumentException("Invalid resource " + datasetName);
+    }
+
+    public static DataPackage load(String path) {
+        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        try {
+            return mapper.readValue(new File(path), DataPackage.class);
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot parse data package descriptor " + path + ", error was " + e.getMessage(), e);
+        }
     }
 }

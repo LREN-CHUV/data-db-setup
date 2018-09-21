@@ -5,10 +5,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class Schema {
 
     private String primaryKey;
     private String datasetKey;
+    private String tableName;
     @JsonProperty("fields")
     private List<Field> fields = new ArrayList<>();
 
@@ -26,6 +28,14 @@ public class Schema {
 
     public void setDatasetKey(String datasetKey) {
         this.datasetKey = datasetKey;
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
     }
 
     public List<Field> getFields() {

@@ -35,6 +35,9 @@ COPY --from=build-java-env \
         /usr/share/maven/ref/repository/net/sf/supercsv/super-csv/2.4.0/super-csv-2.4.0.jar \
         /usr/share/maven/ref/repository/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar \
         /usr/share/maven/ref/repository/com/github/spullara/mustache/java/compiler/0.9.5/compiler-0.9.5.jar \
+        /usr/share/maven/ref/repository/com/fasterxml/jackson/core/jackson-core/2.9.7/jackson-core-2.9.7.jar \
+        /usr/share/maven/ref/repository/com/fasterxml/jackson/core/jackson-databind/2.9.7/jackson-databind-2.9.7.jar \
+        /usr/share/maven/ref/repository/com/fasterxml/jackson/core/jackson-annotations/2.9.0/jackson-annotations-2.9.0.jar \
         /flyway/lib/
 COPY docker/run.sh /
 

@@ -2,6 +2,7 @@ package eu.humanbrainproject.mip.migrations.datapackage;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@SuppressWarnings("unused")
 public class Resource {
 
     private String path = "";

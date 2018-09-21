@@ -25,7 +25,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -33,19 +32,16 @@ import java.util.zip.CRC32;
 
 public abstract class AbstractDatasetSetup extends MipMigration implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
 
-    private static final String SQL_INSERT = "INSERT INTO ${table}(${keys}) VALUES(${values})";
-    private static final String TABLE_REGEX = "\\$\\{table}";
+    static final String TABLE_REGEX = "\\$\\{table}";
     private static final String KEYS_REGEX = "\\$\\{keys}";
     private static final String VALUES_REGEX = "\\$\\{values}";
+    private static final String SQL_INSERT = "INSERT INTO ${table}(${keys}) VALUES(${values})";
     private static final int BATCH_SIZE = 1000;
 
     @Override
     public void migrate(Connection connection) throws Exception {
         String[] datasets = getDatasets();
-        if (datasets.length == 1 && "".equals(datasets[0])) {
-            if (getDatapackage() == null) {
-                getLogger().info("No dataset defined, we will not setup dataset values.");
-            }
+        if (!shouldAttemptMigration(datasets)) {
             return;
         }
         try {
@@ -73,47 +69,20 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
         }
     }
 
-    protected String getDatasetCsvFilePath(String datasetName) throws IOException {
-        final Properties dataset = getDatasetProperties(datasetName);
+    protected abstract boolean shouldAttemptMigration(String[] datasets);
 
-        final String csvFileName = dataset.getProperty("__CSV_FILE", "/data/values.csv");
-        return getDataResourcePath(csvFileName);
-    }
+    protected abstract String getDatasetCsvFilePath(String datasetName) throws IOException;
 
-    protected String getDatasetTableName(String datasetName) throws IOException {
-        final Properties dataset = getDatasetProperties(datasetName);
+    protected abstract String getDatasetTableName(String datasetName) throws IOException;
 
-        final String tableName = dataset.getProperty("__TABLE", "");
+    protected abstract String getDatasetDeleteQuery(String datasetName) throws IOException;
 
-        if (tableName == null) {
-            throw new IllegalArgumentException("__TABLE properties is not defined for dataset " + datasetName);
-        }
+    protected abstract String getDatasetPrimaryKey(String datasetName) throws IOException;
 
-        return tableName;
-    }
-
-    protected String getDatasetDeleteQuery(String datasetName) throws IOException {
-        final Properties dataset = getDatasetProperties(datasetName);
-        final String tableName = getDatasetTableName(datasetName);
-
-        return dataset.getProperty("__DELETE_SQL", "DELETE FROM " + tableName)
-                .replaceFirst(TABLE_REGEX, tableName);
-    }
-
-    protected String getDatasetPrimaryKey(String datasetName) throws IOException {
-        final Properties dataset = getDatasetProperties(datasetName);
-        String columnsStr = columnsDef.getProperty("__COLUMNS");
-        List<String> columns = Arrays.asList(StringUtils.split(columnsStr, ","));
-
-        if (columnsDef.getProperty(column + ".constraints", "").equals("is_index"))
-        final String tableName = getDatasetTableName(datasetName);
-
-        return dataset.getProperty("__DELETE_SQL", "DELETE FROM " + tableName)
-                .replaceFirst(TABLE_REGEX, tableName);
-    }
+    protected abstract List<Field> getFields(String datasetName) throws IOException;
 
     private void loadDataset(Connection connection, String datasetName) throws IOException, SQLException {
-        final String csvFileName = getDatasetCsvFilePath(datasetName);
+        final String csvFileName = getDataResourcePath(getDatasetCsvFilePath(datasetName));
         final String tableName = getDatasetTableName(datasetName);
 
         if (csvFileName.equals("/dev/null") || csvFileName.equals("/data/")) {
@@ -123,13 +92,13 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
 
         final String deleteSql = getDatasetDeleteQuery(datasetName);
         final String primaryKey = getDatasetPrimaryKey(datasetName);
-        final Properties columns = getColumnsProperties(tableName);
+        final List<Field> fields = getFields(datasetName);
 
         try (ICsvListReader csvReader = new CsvListReader(new FileReader(csvFileName), CsvPreference.STANDARD_PREFERENCE)) {
 
             // skip the header
             final String[] header = csvReader.getHeader(true);
-            final CellProcessor[] processors = getProcessors(columns, header);
+            final CellProcessor[] processors = getProcessors(fields, primaryKey, header);
 
             String questionMarks = StringUtils.repeat("?,", header.length);
             questionMarks = (String) questionMarks.subSequence(0, questionMarks
@@ -142,6 +111,7 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
             try (PreparedStatement statement = connection.prepareStatement(query)) {
 
                 // Delete data from table before loading csv
+                getLogger().info("Delete previous records using query: " + deleteSql);
                 connection.createStatement().execute(deleteSql);
 
                 List<Object> values;
@@ -150,11 +120,12 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
                     int index = 1;
                     for (Object v : values) {
                         String column = header[index - 1];
-                        String sqlType = columns.getProperty(column + ".type", "VARCHAR");
-                        if (columns.getProperty(column + ".type") == null) {
-                            getLogger().warning("Column type for " + column + " is not defined in columns.properties");
-                        }
-                        final int sqlTypeCode = getSqlType(sqlType);
+                        Field field = fields.stream()
+                                .filter(f -> f.getName().equals(column))
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalStateException("Expected to find column " + column));
+                        final int sqlTypeCode = field.getSqlTypeCode();
+
                         if (v == null) {
                             statement.setNull(index, sqlTypeCode);
                         } else {
@@ -239,12 +210,6 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
         return null;
     }
 
-    @Override
-    public String getDescription() {
-        String[] datasets = getDatasets();
-        return "Setup dataset" + (datasets.length > 1 ? "s " : " ") + StringUtils.join(datasets, ',');
-    }
-
     protected abstract Logger getLogger();
 
     /**
@@ -284,9 +249,9 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
     }
 
     private CellProcessorAdaptor getCellProcessorAdaptor(String primaryKey, Field column) {
-        String colType = shortType(column.getType());
+        String colType = column.getSqlTypeShort();
         if (column.getName().equals(primaryKey)) {
-            if ("int".equals(colType)) {
+            if ("int".equals(colType) || "integer".equals(colType)) {
                 return new ParseInt();
             } else {
                 return new UniqueHashCode();
@@ -294,10 +259,9 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
         } else {
             switch (colType) {
                 case "char":
-                    return new Optional();
                 case "varchar":
-                    return new Optional();
                 case "text":
+                case "string":
                     return new Optional();
                 case "numeric":
                 case "number":
@@ -313,33 +277,6 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
                     throw new IllegalArgumentException("Unknown type " + colType + " on column " + column);
             }
         }
-    }
-
-    private static int getSqlType(String sqlType) {
-        switch (shortType(sqlType)) {
-            case "char":
-                return Types.CHAR;
-            case "varchar":
-                return Types.VARCHAR;
-            case "text":
-                return Types.CLOB;
-            case "int":
-            case "integer":
-                return Types.INTEGER;
-            case "numeric":
-            case "number":
-                return Types.NUMERIC;
-            case "date":
-                return Types.DATE;
-            case "timestamp":
-                return Types.TIMESTAMP;
-            default:
-                throw new IllegalArgumentException("Unknown SQL type: " + sqlType);
-        }
-    }
-
-    private static String shortType(String sqlType) {
-        return sqlType.replaceAll("\\(.*\\)", "").toLowerCase();
     }
 
 }

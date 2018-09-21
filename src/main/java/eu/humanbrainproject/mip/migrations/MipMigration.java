@@ -1,7 +1,6 @@
 package eu.humanbrainproject.mip.migrations;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.humanbrainproject.mip.migrations.datapackage.Datapackage;
+import eu.humanbrainproject.mip.migrations.datapackage.DataPackage;
 import eu.humanbrainproject.mip.migrations.datapackage.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
@@ -14,28 +13,23 @@ public abstract class MipMigration implements JdbcMigration {
     private final Map<String, Properties> tableColumns = new HashMap<>();
     private final Map<String, Properties> datasetProperties = new HashMap<>();
 
-    private Datapackage datapackage;
+    private DataPackage datapackage;
 
-    protected Datapackage getDatapackage() {
+    protected DataPackage getDataPackage() {
         String datapackageStr = System.getenv("DATAPACKAGE");
         if (datapackage == null && datapackageStr != null && !datapackageStr.isEmpty()) {
-            ObjectMapper mapper = new ObjectMapper();
             if (!existsDataResource(datapackageStr)) {
                 throw new IllegalStateException("Cannot load data package descriptor from " + getDataResourcePath(datapackageStr) +
                         ". Check DATAPACKAGE environment variable and contents of the Docker image");
             }
-            try {
-                datapackage = mapper.readValue(getDataResource(datapackageStr), Datapackage.class);
-            } catch (IOException e) {
-                throw new IllegalStateException("Cannot parse data package descriptor " + datapackageStr + ", error was " + e.getMessage(), e);
-            }
+            datapackage = DataPackage.load(getDataResourcePath(datapackageStr));
         }
         return datapackage;
     }
 
     protected String[] getDatasets() {
-        if (getDatapackage() != null) {
-            return getDatapackage().getResources().stream().map(Resource::getName).toArray(String[]::new);
+        if (getDataPackage() != null) {
+            return getDataPackage().getResources().stream().map(Resource::getName).toArray(String[]::new);
         }
 
         String datasetsStr = System.getenv("DATASETS");
@@ -57,8 +51,8 @@ public abstract class MipMigration implements JdbcMigration {
     }
 
     protected InputStream getDatasetResource(String datasetName) {
-        if (getDatapackage() != null) {
-            String path = getDatapackage().getResource(datasetName).getPath();
+        if (getDataPackage() != null) {
+            String path = getDataPackage().getResource(datasetName).getPath();
             if (!existsDataResource(path)) {
                 throw new IllegalStateException("Cannot load resource from " + getDataResourcePath(path) +
                         ". Check datapackage.json descriptor and contents of the Docker image");
@@ -121,7 +115,7 @@ public abstract class MipMigration implements JdbcMigration {
         return ids;
     }
 
-    protected String getConfigResourcePath(String path) {
+    private String getConfigResourcePath(String path) {
         if (!path.startsWith("/")) {
             return "/flyway/config/" + path;
         }
@@ -158,7 +152,7 @@ public abstract class MipMigration implements JdbcMigration {
         return path;
     }
 
-    protected boolean existsDataResource(String name) {
+    private boolean existsDataResource(String name) {
         if (getClass().getResource(name) != null) {
             return true;
         }
@@ -168,7 +162,7 @@ public abstract class MipMigration implements JdbcMigration {
         return dataFile.canRead();
     }
 
-    protected InputStream getDataResource(String name) {
+    private InputStream getDataResource(String name) {
         if (getClass().getResource(name) != null) {
             return getClass().getResourceAsStream(name);
         }
