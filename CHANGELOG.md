@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 2.5.0 - 2018-09-21
+
+* Use datackages.json (see [Frictionlessdata](https://http://frictionlessdata.io/)) to define the data to load.
+
 ## 2.4.0 - 2018-09-07
 
 * Configuration is now stored in folder /flyway/config/ inside the Docker image
