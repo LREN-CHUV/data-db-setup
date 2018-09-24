@@ -44,6 +44,11 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.9.7</version>
     </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.2.3</version>
+    </dependency>
   </dependencies>
 
   <properties>
@@ -55,6 +60,12 @@
     <finalName>${project.artifactId}</finalName>
     <sourceDirectory>${src.dir}</sourceDirectory>
     <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>*.xml</include>
+        </includes>
+      </resource>
       <resource>
         <directory>${src.dir}</directory>
         <includes>

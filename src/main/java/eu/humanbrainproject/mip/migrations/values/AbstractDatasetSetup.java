@@ -1,6 +1,6 @@
 package eu.humanbrainproject.mip.migrations.values;
 
-import eu.humanbrainproject.mip.migrations.MipMigration;
+import eu.humanbrainproject.mip.migrations.MigrationConfiguration;
 import eu.humanbrainproject.mip.migrations.datapackage.Field;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.MigrationVersion;
@@ -25,22 +25,24 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
-public abstract class AbstractDatasetSetup extends MipMigration implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
+import org.slf4j.Logger;
+
+public abstract class AbstractDatasetSetup implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
 
     static final String TABLE_REGEX = "\\$\\{table}";
     private static final String KEYS_REGEX = "\\$\\{keys}";
     private static final String VALUES_REGEX = "\\$\\{values}";
     private static final String SQL_INSERT = "INSERT INTO ${table}(${keys}) VALUES(${values})";
-    private static final int BATCH_SIZE = 1000;
+    private static final int BATCH_SIZE = 100;
+
+    protected final MigrationConfiguration config = new MigrationConfiguration();
 
     @Override
     public void migrate(Connection connection) throws Exception {
-        String[] datasets = getDatasets();
+        String[] datasets = config.getDatasets();
         if (!shouldAttemptMigration(datasets)) {
             return;
         }
@@ -56,14 +58,14 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
             connection.commit();
 
         } catch (java.sql.BatchUpdateException e) {
-            getLogger().log(Level.SEVERE, "Cannot migrate data", e);
+            getLogger().error("Cannot migrate data", e);
             if (e.getNextException() != null) {
-                getLogger().log(Level.SEVERE, "Caused by", e.getNextException());
+                getLogger().error("Caused by", e.getNextException());
             }
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Cannot migrate data", e);
+            getLogger().error("Cannot migrate data", e);
             if (e.getCause() != null) {
-                getLogger().log(Level.SEVERE, "Caused by", e.getCause());
+                getLogger().error("Caused by", e.getCause());
             }
             throw e;
         }
@@ -82,11 +84,11 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
     protected abstract List<Field> getFields(String datasetName) throws IOException;
 
     private void loadDataset(Connection connection, String datasetName) throws IOException, SQLException {
-        final String csvFileName = getDataResourcePath(getDatasetCsvFilePath(datasetName));
+        final String csvFileName = config.getDataResourcePath(getDatasetCsvFilePath(datasetName));
         final String tableName = getDatasetTableName(datasetName);
 
         if (csvFileName.equals("/dev/null") || csvFileName.equals("/data/")) {
-            getLogger().warning("No data will be loaded in dataset " + datasetName);
+            getLogger().warn("No data will be loaded in dataset " + datasetName);
             return;
         }
 
@@ -136,7 +138,7 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
                                     if (v instanceof String) {
                                         statement.setString(index, (String) v);
                                     } else {
-                                        getLogger().severe("On column " + column + ", String value expected, found " + v.getClass());
+                                        getLogger().error("On column " + column + ", String value expected, found " + v.getClass());
                                         throw new IllegalArgumentException("On column " + column + ", String value expected, found " + v.getClass());
                                     }
                                     break;
@@ -144,7 +146,7 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
                                     if (v instanceof Integer) {
                                         statement.setInt(index, (Integer) v);
                                     } else {
-                                        getLogger().severe("On column " + column + ", Integer value expected, found " + v.getClass());
+                                        getLogger().error("On column " + column + ", Integer value expected, found " + v.getClass());
                                         throw new IllegalArgumentException("On column " + column + ", Integer value expected, found " + v.getClass());
                                     }
                                     break;
@@ -152,7 +154,7 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
                                     if (v instanceof Double) {
                                         statement.setDouble(index, (Double) v);
                                     } else {
-                                        getLogger().severe("On column " + column + ", Double value expected, found " + v.getClass());
+                                        getLogger().error("On column " + column + ", Double value expected, found " + v.getClass());
                                         throw new IllegalArgumentException("On column " + column + ", Double value expected, found " + v.getClass());
                                     }
                                     break;
@@ -165,9 +167,11 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
                     statement.addBatch();
                     if (csvReader.getLineNumber() % BATCH_SIZE == 0) {
                         statement.executeBatch();
+                        getLogger().info("Saving batch records #" + csvReader.getLineNumber());
                     }
                 }
                 statement.executeBatch(); // insert remaining records
+                getLogger().info("Saved " + csvReader.getLineNumber() + " records for dataset " + datasetName + " into the database");
             }
 
         }
@@ -176,7 +180,7 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
     @Override
     public Integer getChecksum() {
         int checksum = 0;
-        for (String dataset : getDatasets()) {
+        for (String dataset : config.getDatasets()) {
             checksum += computeChecksum(dataset, getLogger());
         }
         return checksum;
@@ -190,7 +194,7 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
         crc32.update(bytes, 0, bytes.length);
 
         // Use the values in the dataset
-        InputStream datasetResource = getDatasetResource(dataset);
+        InputStream datasetResource = config.getDatasetResource(dataset);
         byte[] data = new byte[1024];
         int read;
         try {
@@ -198,7 +202,7 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
                 crc32.update(data, 0, read);
             }
         } catch (IOException e) {
-            log.log(Level.WARNING, "Cannot read data from dataset " + dataset, e);
+            log.warn("Cannot read data from dataset " + dataset, e);
         }
 
         return (int) crc32.getValue();
@@ -231,7 +235,7 @@ public abstract class AbstractDatasetSetup extends MipMigration implements JdbcM
 
         if (!diff2csv.isEmpty()) {
             for (String column : diff2csv) {
-                getLogger().warning("Column " + column + " is defined in the table but not in CSV file");
+                getLogger().warn("Column " + column + " is defined in the table but not in CSV file");
             }
         }
 

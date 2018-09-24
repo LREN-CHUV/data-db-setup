@@ -22,6 +22,7 @@ if [ ! -z "$@" ]; then
 fi
 
 FLYWAY_OPTS="$FLYWAY_OPTS -locations=filesystem:/flyway/sql,classpath:eu/humanbrainproject/mip/migrations -jarDirs=/flyway/jars"
+FLYWAY_OPTS="$FLYWAY_OPTS -callbacks=eu.humanbrainproject.mip.migrations.GenerateTablesCallback"
 
 dockerize $DOCKERIZE_OPTS flyway $FLYWAY_OPTS $@ || {
   err=$?

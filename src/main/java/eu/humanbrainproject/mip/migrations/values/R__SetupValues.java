@@ -7,12 +7,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("unused")
 public class R__SetupValues extends AbstractDatasetSetup {
 
-    private static final Logger LOG = Logger.getLogger("Setup values");
+    private static final Logger LOG = LoggerFactory.getLogger("Setup values");
 
     @Override
     public boolean isUndo() {
@@ -21,16 +22,16 @@ public class R__SetupValues extends AbstractDatasetSetup {
 
     @Override
     public String getDescription() {
-        if (getDataPackage() != null) {
+        if (config.getDataPackage() != null) {
             return "Skipped - Setup values from properties file";
         }
-        String[] datasets = getDatasets();
+        String[] datasets = config.getDatasets();
         return "Setup dataset" + (datasets.length > 1 ? "s " : " ") + StringUtils.join(datasets, ',');
     }
 
     @Override
     protected boolean shouldAttemptMigration(String[] datasets) {
-        if (getDataPackage() != null) {
+        if (config.getDataPackage() != null) {
             return false;
         }
         if (datasets.length == 1 && "".equals(datasets[0])) {
@@ -42,14 +43,14 @@ public class R__SetupValues extends AbstractDatasetSetup {
     }
 
     protected String getDatasetCsvFilePath(String datasetName) throws IOException {
-        final Properties dataset = getDatasetProperties(datasetName);
+        final Properties dataset = config.getDatasetProperties(datasetName);
 
         final String csvFileName = dataset.getProperty("__CSV_FILE", "/data/values.csv");
-        return getDataResourcePath(csvFileName);
+        return config.getDataResourcePath(csvFileName);
     }
 
     protected String getDatasetTableName(String datasetName) throws IOException {
-        final Properties dataset = getDatasetProperties(datasetName);
+        final Properties dataset = config.getDatasetProperties(datasetName);
 
         final String tableName = dataset.getProperty("__TABLE", "");
 
@@ -61,7 +62,7 @@ public class R__SetupValues extends AbstractDatasetSetup {
     }
 
     protected String getDatasetDeleteQuery(String datasetName) throws IOException {
-        final Properties dataset = getDatasetProperties(datasetName);
+        final Properties dataset = config.getDatasetProperties(datasetName);
         final String tableName = getDatasetTableName(datasetName);
 
         return dataset.getProperty("__DELETE_SQL", "DELETE FROM " + tableName)
@@ -69,9 +70,9 @@ public class R__SetupValues extends AbstractDatasetSetup {
     }
 
     protected String getDatasetPrimaryKey(String datasetName) throws IOException {
-        final Properties dataset = getDatasetProperties(datasetName);
+        final Properties dataset = config.getDatasetProperties(datasetName);
         final String tableName = getDatasetTableName(datasetName);
-        final Properties columns = getColumnsProperties(tableName);
+        final Properties columns = config.getColumnsProperties(tableName);
         String columnsStr = columns.getProperty("__COLUMNS");
 
         for (String column: StringUtils.split(columnsStr, ",")) {
@@ -85,7 +86,7 @@ public class R__SetupValues extends AbstractDatasetSetup {
 
     protected List<Field> getFields(String datasetName) throws IOException {
         final String tableName = getDatasetTableName(datasetName);
-        final Properties columns = getColumnsProperties(tableName);
+        final Properties columns = config.getColumnsProperties(tableName);
 
         String columnsStr = columns.getProperty("__COLUMNS");
         List<Field> fields = new ArrayList<>();
@@ -94,7 +95,7 @@ public class R__SetupValues extends AbstractDatasetSetup {
 
             String sqlType = columns.getProperty(column + ".type", "VARCHAR");
             if (columns.getProperty(column + ".type") == null) {
-                getLogger().warning("Column type for " + column + " is not defined in columns.properties");
+                getLogger().warn("Column type for " + column + " is not defined in columns.properties");
             }
 
             Field field = new Field();

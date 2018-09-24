@@ -1,6 +1,6 @@
 package eu.humanbrainproject.mip.migrations.views;
 
-import eu.humanbrainproject.mip.migrations.MipMigration;
+import eu.humanbrainproject.mip.migrations.MigrationConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.migration.MigrationChecksumProvider;
@@ -19,9 +19,10 @@ import java.util.logging.Logger;
 import java.util.zip.CRC32;
 
 @SuppressWarnings("unused")
-public class R__CreateViews extends MipMigration implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
+public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
 
     private static final Logger LOG = Logger.getLogger("Create views");
+    private MigrationConfiguration config = new MigrationConfiguration();
 
     private final Map<String, Properties> viewProperties = new HashMap<>();
 
@@ -53,11 +54,11 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
         Map<String, Object> scopes = new HashMap<>();
         int i = 0;
         for (String table : getTables(view)) {
-            Properties tableProperties = getColumnsProperties(table);
+            Properties tableProperties = config.getColumnsProperties(table);
 
             String tableName = tableProperties.getProperty("__TABLE", table);
-            List<String> columns = getColumns(table);
-            List<String> ids = getIdColumns(table);
+            List<String> columns = config.getColumns(table);
+            List<String> ids = config.getIdColumns(table);
 
             final Table templateValue = new Table(tableName, columns, ids);
             scopes.put("table" + (++i), templateValue);
@@ -112,14 +113,14 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
     private InputStream getViewResource(String viewName) {
         String propertiesFile = (viewName == null) ? "view.properties" : viewName + "_view.properties";
-        if (!existsConfigResource(propertiesFile) && getViews().length == 1) {
+        if (!config.existsConfigResource(propertiesFile) && getViews().length == 1) {
             propertiesFile = "view.properties" ;
         }
-        if (!existsConfigResource(propertiesFile)) {
+        if (!config.existsConfigResource(propertiesFile)) {
             throw new IllegalStateException("Cannot load resource for view " + viewName + " from /config/" +
                     propertiesFile + ". Check VIEWS environment variable and contents of the jar");
         }
-        return getConfigResource(propertiesFile);
+        return config.getConfigResource(propertiesFile);
     }
 
     private InputStream getViewTemplateResource(String viewName) throws IOException {
@@ -128,15 +129,15 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
 
         if (sqlTemplateFile == null) {
             sqlTemplateFile = (viewName == null) ? "view.mustache.sql" : viewName + "_view.mustache.sql";
-            if (!existsConfigResource(sqlTemplateFile) && getViews().length == 1) {
+            if (!config.existsConfigResource(sqlTemplateFile) && getViews().length == 1) {
                 sqlTemplateFile = "view.mustache.sql";
             }
         }
-        if (!existsConfigResource(sqlTemplateFile)) {
+        if (!config.existsConfigResource(sqlTemplateFile)) {
             throw new IllegalStateException("Cannot load resource for view " + viewName + " from /config/" +
                     sqlTemplateFile + ". Check VIEWS environment variable and contents of the jar");
         }
-        return getConfigResource(sqlTemplateFile);
+        return config.getConfigResource(sqlTemplateFile);
     }
 
     @Override
@@ -178,7 +179,7 @@ public class R__CreateViews extends MipMigration implements JdbcMigration, Migra
         // CRC for tables
         try {
             for (String table : getTables(view)) {
-                InputStream tableResource = getColumnsResource(table);
+                InputStream tableResource = config.getColumnsResource(table);
                 crcForResource(crc32, tableResource);
             }
         } catch (IOException e) {

@@ -4,9 +4,10 @@ import eu.humanbrainproject.mip.migrations.datapackage.Field;
 import eu.humanbrainproject.mip.migrations.datapackage.Resource;
 import eu.humanbrainproject.mip.migrations.datapackage.Schema;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Setup values using the definition from Data-package
@@ -14,7 +15,7 @@ import java.util.logging.Logger;
 @SuppressWarnings("unused")
 public class R__SetupDataPackage extends AbstractDatasetSetup {
 
-    private static final Logger LOG = Logger.getLogger("Setup data-package");
+    private static final Logger LOG = LoggerFactory.getLogger("Setup data-package");
 
     @Override
     public boolean isUndo() {
@@ -23,16 +24,16 @@ public class R__SetupDataPackage extends AbstractDatasetSetup {
 
     @Override
     public String getDescription() {
-        if (getDataPackage() == null) {
+        if (config.getDataPackage() == null) {
             return "Skipped - Setup datapackage";
         }
-        String[] datasets = getDatasets();
+        String[] datasets = config.getDatasets();
         return "Setup dataset" + (datasets.length > 1 ? "s " : " ") + StringUtils.join(datasets, ',');
     }
 
     @Override
     protected boolean shouldAttemptMigration(String[] datasets) {
-        if (getDataPackage() == null) {
+        if (config.getDataPackage() == null) {
             return false;
         }
         if (datasets.length == 1 && "".equals(datasets[0])) {
@@ -45,17 +46,23 @@ public class R__SetupDataPackage extends AbstractDatasetSetup {
 
     @Override
     protected String getDatasetCsvFilePath(String datasetName) {
-        return getDataPackage().getResource(datasetName).getPath();
+        return config.getDataPackage().getResource(datasetName).getPath();
     }
 
     @Override
     protected String getDatasetTableName(String datasetName) {
-        return getDataPackage().getResource(datasetName).getSchema().getTableName();
+        final String tableName = config.getDataPackage().getResource(datasetName).getSchema().getTableName();
+
+        if (tableName == null) {
+            throw new IllegalArgumentException("tableName property is not defined in the schema for dataset " + datasetName);
+        }
+
+        return tableName;
     }
 
     @Override
     protected String getDatasetDeleteQuery(String datasetName) {
-        final Resource resource = getDataPackage().getResource(datasetName);
+        final Resource resource = config.getDataPackage().getResource(datasetName);
         String query = resource.getDeleteQuery();
         if (query == null) {
             final Schema schema = resource.getSchema();
@@ -70,12 +77,12 @@ public class R__SetupDataPackage extends AbstractDatasetSetup {
 
     @Override
     protected String getDatasetPrimaryKey(String datasetName) {
-        return getDataPackage().getResource(datasetName).getSchema().getPrimaryKey();
+        return config.getDataPackage().getResource(datasetName).getSchema().getPrimaryKey();
     }
 
     @Override
     protected List<Field> getFields(String datasetName) {
-        return getDataPackage().getResource(datasetName).getSchema().getFields();
+        return config.getDataPackage().getResource(datasetName).getSchema().getFields();
     }
 
     @Override

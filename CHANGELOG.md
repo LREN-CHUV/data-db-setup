@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 2.5.1 - 2018-09-24
+
+*
+
 ## 2.5.0 - 2018-09-21
 
 * Use datackages.json (see [Frictionlessdata](https://http://frictionlessdata.io/)) to define the data to load.

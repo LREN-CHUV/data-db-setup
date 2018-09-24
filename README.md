@@ -33,14 +33,18 @@ where the environment variables are:
 * FLYWAY_SCHEMAS: Optional, comma-separated list of schemas managed by Flyway
 * FLYWAY_TABLE: Optional, name of Flyway's metadata table (default: schema_version)
 * DATASETS: column-separated list of datasets to load. Each dataset should have a descriptor defined as a Java properties file (\<dataset\>\_dataset.properties) located in a jar under eu.humanbrainproject.mip.migrations package.
+* DATAPACKAGE: column-separated list of datapackage.json files to load. This is an alternative method to describing datasets using properties files.
 * VIEWS: column-separated list of views to create. Each view should have a descriptor defined as a Java properties file (\<view\>\_view.properties) located in a jar under eu.humanbrainproject.mip.migrations package,
   as well as a SQL template whose name is defined with the property \_\_SQL_TEMPLATE and that should be located in the same jar and package.
+* AUTO_GENERATE_TABLES: if set to true, will attempt to generate the tables from the datapackage definition. Use this method only for development or quick prototyping, as tables should normally be created using SQL migrations managed by Flyway.
 
 The following environment variables should be defined statically by child images of data-db-setup:
 
 * IMAGE: name of this Docker image, including version (for help message)
 * DATASETS: column-separated list of datasets to load.
+* DATAPACKAGE: column-separated list of datapackage.json files to load. This is an alternative method to describing datasets using properties files.
 * VIEWS: column-separated list of views to create.
+* AUTO_GENERATE_TABLES: if set to true, will attempt to generate the tables from the datapackage definition. Use this method only for development or quick prototyping, as tables should normally be created using SQL migrations managed by Flyway.
 
 This image is most likely going to be used as the parent image for a specialised image that installs a particular dataset.
 
@@ -48,18 +52,6 @@ The Dockerfile for the specialised image should look like:
 
 Dockerfile
 ```dockerfile
-  # Recover the jar from the parent image
-  FROM hbpmip/data-db-setup:2.5.0 as parent-image
-
-  # Build stage for Java classes
-  FROM maven:3.5.2-jdk-8-alpine as build-java-env
-
-  COPY --from=parent-image /usr/share/jars/data-db-setup.jar /flyway/jars/
-  COPY src/main/java/ /project/src/
-
-  WORKDIR /project/src
-  RUN jar uvf /flyway/jars/data-db-setup.jar -C . .
-
   # Final image
   FROM hbpmip/data-db-setup:2.5.0
 
@@ -67,21 +59,26 @@ Dockerfile
   ARG VCS_REF
   ARG VERSION
 
-  COPY --from=build-java-env /flyway/jars/data-db-setup.jar /flyway/jars/data-db-setup.jar
-  COPY sql/empty.csv /data/
+  COPY data/empty.csv datapackage.json /data/
   COPY sql/V1_0__create.sql /flyway/sql/
   COPY docker/run.sh /
 
   RUN chmod +x /run.sh
 
   ENV IMAGE=hbpmip/my-data-db-setup:1.0.0 \
-      DATASETS=empty
+      DATAPACKAGE=/data/datapackage.json
 
 ```
 
 ## Build
 
 Run: `./build.sh`
+
+## Testing
+
+```
+  ./test/test.sh
+```
 
 ## Publish on Docker Hub
 
