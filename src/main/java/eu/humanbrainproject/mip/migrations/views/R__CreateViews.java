@@ -22,8 +22,8 @@ import java.util.zip.CRC32;
 public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
 
     private static final Logger LOG = Logger.getLogger("Create views");
-    private MigrationConfiguration config = new MigrationConfiguration();
 
+    private MigrationConfiguration config = new MigrationConfiguration(this.getClass());
     private final Map<String, Properties> viewProperties = new HashMap<>();
 
     @Override

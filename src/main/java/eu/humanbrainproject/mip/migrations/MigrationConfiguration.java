@@ -13,6 +13,14 @@ public class MigrationConfiguration {
     private final Map<String, Properties> datasetProperties = new HashMap<>();
 
     private DataPackage datapackage;
+    private Class<?> resourceBaseClass = this.getClass();
+
+    public MigrationConfiguration() {
+    }
+
+    public MigrationConfiguration(Class<?> resourceBaseClass) {
+        this.resourceBaseClass = resourceBaseClass;
+    }
 
     public DataPackage getDataPackage() {
         String datapackageStr = System.getenv("DATAPACKAGE");
@@ -122,7 +130,7 @@ public class MigrationConfiguration {
     }
 
     public boolean existsConfigResource(String name) {
-        if (getClass().getResource(name) != null) {
+        if (resourceBaseClass.getResource(name) != null) {
             return true;
         }
 
@@ -132,8 +140,8 @@ public class MigrationConfiguration {
     }
 
     public InputStream getConfigResource(String name) {
-        if (getClass().getResource(name) != null) {
-            return getClass().getResourceAsStream(name);
+        if (resourceBaseClass.getResource(name) != null) {
+            return resourceBaseClass.getResourceAsStream(name);
         }
 
         final File configFile = new File(getConfigResourcePath(name));
@@ -152,7 +160,7 @@ public class MigrationConfiguration {
     }
 
     private boolean existsDataResource(String name) {
-        if (getClass().getResource(name) != null) {
+        if (resourceBaseClass.getResource(name) != null) {
             return true;
         }
 
@@ -162,8 +170,8 @@ public class MigrationConfiguration {
     }
 
     private InputStream getDataResource(String name) {
-        if (getClass().getResource(name) != null) {
-            return getClass().getResourceAsStream(name);
+        if (resourceBaseClass.getResource(name) != null) {
+            return resourceBaseClass.getResourceAsStream(name);
         }
 
         final File dataFile = new File(getDataResourcePath(name));
