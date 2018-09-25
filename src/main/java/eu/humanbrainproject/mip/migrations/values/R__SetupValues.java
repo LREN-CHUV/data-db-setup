@@ -65,7 +65,7 @@ public class R__SetupValues extends AbstractDatasetSetup {
         final Properties dataset = config.getDatasetProperties(datasetName);
         final String tableName = getDatasetTableName(datasetName);
 
-        return dataset.getProperty("__DELETE_SQL", "DELETE FROM " + tableName)
+        return dataset.getProperty("__DELETE_SQL", "DELETE FROM \"" + tableName + "\"")
                 .replaceFirst(TABLE_REGEX, tableName);
     }
 

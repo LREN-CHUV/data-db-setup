@@ -35,7 +35,7 @@ public abstract class AbstractDatasetSetup implements JdbcMigration, MigrationIn
     static final String TABLE_REGEX = "\\$\\{table}";
     private static final String KEYS_REGEX = "\\$\\{keys}";
     private static final String VALUES_REGEX = "\\$\\{values}";
-    private static final String SQL_INSERT = "INSERT INTO ${table}(${keys}) VALUES(${values})";
+    private static final String SQL_INSERT = "INSERT INTO \"${table}\"(${keys}) VALUES(${values})";
     private static final int BATCH_SIZE = 100;
 
     protected final MigrationConfiguration config = new MigrationConfiguration();

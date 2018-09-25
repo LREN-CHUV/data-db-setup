@@ -241,14 +241,14 @@ public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, Mig
 
         public String getQualifiedColumns() {
             List<String> cols = new ArrayList<>(columns);
-            cols.replaceAll(s -> name + ".\"" + s + "\"");
+            cols.replaceAll(s -> "\"" + name + "\".\"" + s + "\"");
             return StringUtils.join(cols, ',');
         }
 
         public String getQualifiedColumnsNoId() {
             List<String> cols = new ArrayList<>(columns);
             cols.removeAll(ids);
-            cols.replaceAll(s -> name + ".\"" + s + "\"");
+            cols.replaceAll(s -> "\"" + name + "\".\"" + s + "\"");
             return StringUtils.join(cols, ',');
         }
 
@@ -256,9 +256,7 @@ public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, Mig
             if (ids.size() != 1) {
                 throw new IllegalStateException("Table " + name + " does not have one column used as id");
             }
-            List<String> cols = new ArrayList<>(ids);
-            cols.replaceAll(s -> '"' + name + "." + s + '"');
-            return name + ".\"" + ids.get(0) + "\"";
+            return "\"" + name + "\".\"" + ids.get(0) + "\"";
         }
 
     }

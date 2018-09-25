@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 2.5.3 - 2018-09-24
+
+* Case sensitive for view and table names
+
 ## 2.5.2 - 2018-09-24
 
 * Datapackage: read externalized table schema json

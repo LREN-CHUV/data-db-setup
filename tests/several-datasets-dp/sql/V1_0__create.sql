@@ -1,6 +1,6 @@
 SET datestyle to 'European';
 
-CREATE TABLE SAMPLE_DATA
+CREATE TABLE "sample_data"
 (
   "id" int,
   "stress_before_test1" numeric,

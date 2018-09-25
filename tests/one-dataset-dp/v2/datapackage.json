@@ -10,7 +10,6 @@
   "profile": "tabular-data-package",
   "resources": [
     {
-      "deleteQuery": "DELETE FROM sample_data WHERE dataset='test1'",
       "description": "Test data",
       "dialect": {
         "delimiter": ",",
@@ -93,7 +92,7 @@
           ""
         ],
         "primaryKey": "id",
-        "tableName": "sample_data"
+        "tableName": "SAMPLE_DATA"
       }
     }
   ],

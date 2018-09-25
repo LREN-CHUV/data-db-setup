@@ -1,4 +1,4 @@
 SET datestyle to 'European';
 
-ALTER TABLE SAMPLE_DATA
+ALTER TABLE "sample_data"
   ADD COLUMN "new_col" varchar(20);

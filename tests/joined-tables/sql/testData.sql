@@ -4,16 +4,16 @@ BEGIN;
 SELECT plan( 6 );
 
 SELECT is(count(*)::INT, 1, 'Sample #150 should be present')
-  FROM sample_data where id=150;
+  FROM "SAMPLE_DATA" where id=150;
 
 SELECT is(count(*)::INT, 150, 'Missing rows?')
-  FROM sample_data;
+  FROM "SAMPLE_DATA";
 
 SELECT is(count(*)::INT, 1, 'Sample #150 should be present')
-  FROM data_to_join where id=150;
+  FROM "DATA_TO_JOIN" where id=150;
 
 SELECT is(count(*)::INT, 150, 'Missing rows?')
-  FROM data_to_join;
+  FROM "DATA_TO_JOIN";
 
 SELECT is(count(*)::INT, 1, 'Migration of testA and testB datasets should be present')
   FROM schema_version where description='Setup datasets testA,testB';

@@ -1,6 +1,6 @@
 SET datestyle to 'European';
 
-CREATE TABLE SAMPLE_DATA
+CREATE TABLE "SAMPLE_DATA"
 (
   "id" int,
   "stress_before_test1" numeric,
@@ -19,7 +19,7 @@ WITH (
   OIDS=FALSE
 );
 
-CREATE TABLE DATA_TO_JOIN
+CREATE TABLE "DATA_TO_JOIN"
 (
   "id" int,
   "dataset" varchar(20),
