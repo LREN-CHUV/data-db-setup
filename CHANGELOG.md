@@ -1,9 +1,14 @@
 
 # Changelog
 
+## 2.5.2 - 2018-09-24
+
+* Datapackage: read externalized table schema json
+* Use order of columns from CSV headers when reading CSV file
+
 ## 2.5.1 - 2018-09-24
 
-*
+* Generate tables from datapackage if AUTO_GENERATE_TABLES is set to yes
 
 ## 2.5.0 - 2018-09-21
 

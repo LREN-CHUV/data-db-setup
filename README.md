@@ -37,6 +37,7 @@ where the environment variables are:
 * VIEWS: column-separated list of views to create. Each view should have a descriptor defined as a Java properties file (\<view\>\_view.properties) located in a jar under eu.humanbrainproject.mip.migrations package,
   as well as a SQL template whose name is defined with the property \_\_SQL_TEMPLATE and that should be located in the same jar and package.
 * AUTO_GENERATE_TABLES: if set to true, will attempt to generate the tables from the datapackage definition. Use this method only for development or quick prototyping, as tables should normally be created using SQL migrations managed by Flyway.
+* LOG_LEVEL: desired log level, default is 'info', use 'debug' for more verbose output
 
 The following environment variables should be defined statically by child images of data-db-setup:
 

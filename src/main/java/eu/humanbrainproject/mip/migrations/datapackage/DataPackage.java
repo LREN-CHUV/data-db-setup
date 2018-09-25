@@ -1,11 +1,17 @@
 package eu.humanbrainproject.mip.migrations.datapackage;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 @SuppressWarnings("unused")
@@ -69,9 +75,21 @@ public class DataPackage {
     }
 
     public static DataPackage load(String path) {
-        ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
-            return mapper.readValue(new File(path), DataPackage.class);
+            ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+            ObjectNode root = (ObjectNode) mapper.readTree(new File(path));
+            final Iterator<JsonNode> resources = root.get("resources").elements();
+            while (resources.hasNext()) {
+                ObjectNode resource = (ObjectNode) resources.next();
+                JsonNode schema = resource.get("schema");
+                if (schema.isTextual()) {
+                    String schemaFileName = schema.asText();
+                    final File schemaPath = new File(new File(path).getParentFile(), schemaFileName);
+                    resource.set("schema", mapper.readTree(schemaPath));
+                }
+            }
+            return mapper.treeToValue(root, DataPackage.class);
         } catch (IOException e) {
             throw new IllegalStateException("Cannot parse data package descriptor " + path + ", error was " + e.getMessage(), e);
         }

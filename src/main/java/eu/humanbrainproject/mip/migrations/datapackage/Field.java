@@ -11,6 +11,8 @@ public class Field {
     private String title = "";
     private String description = "";
     private String sqlType = null;
+    private boolean required = false;
+    private boolean unique = false;
 
     public String getName() {
         return name;
@@ -107,6 +109,22 @@ public class Field {
             default:
                 throw new IllegalArgumentException("Unknown SQL type: " + sqlType);
         }
+    }
+
+    public boolean isRequired() {
+        return required;
+    }
+
+    public void setRequired(boolean required) {
+        this.required = required;
+    }
+
+    public boolean isUnique() {
+        return unique;
+    }
+
+    public void setUnique(boolean unique) {
+        this.unique = unique;
     }
 
     @Override

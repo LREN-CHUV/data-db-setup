@@ -9,78 +9,7 @@
       "name": "test1",
       "path": "data1.csv",
       "profile": "tabular-data-resource",
-      "schema": {
-        "datasetKey": "dataset",
-        "fields": [
-          {
-            "format": "default",
-            "name": "id",
-            "required": true,
-            "type": "integer",
-            "unique": true
-          },
-          {
-            "format": "default",
-            "name": "stress_before_test1",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "score_test1",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "iq",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "cognitive_task2",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "practice_task2",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "response_time_task2",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "college_math",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "score_math_course1",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "score_math_course2",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "dataset",
-            "type": "string"
-          },
-          {
-            "format": "default",
-            "name": "new_col",
-            "type": "string"
-          }
-        ],
-        "missingValues": [
-          ""
-        ],
-        "primaryKey": "id",
-        "tableName": "sample_data"
-      }
+      "schema": "sample-data-schema.json"
     },
     {
       "encoding": "utf-8",
@@ -89,73 +18,7 @@
       "name": "test2",
       "path": "data2.csv",
       "profile": "tabular-data-resource",
-      "schema": {
-        "datasetKey": "dataset",
-        "fields": [
-          {
-            "format": "default",
-            "name": "id",
-            "required": true,
-            "type": "integer",
-            "unique": true
-          },
-          {
-            "format": "default",
-            "name": "stress_before_test1",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "score_test1",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "iq",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "cognitive_task2",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "practice_task2",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "response_time_task2",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "college_math",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "score_math_course1",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "score_math_course2",
-            "type": "number"
-          },
-          {
-            "format": "default",
-            "name": "dataset",
-            "type": "string"
-          }
-        ],
-        "missingValues": [
-          ""
-        ],
-        "primaryKey": "id",
-        "tableName": "sample_data"
-      }
+      "schema": "sample-data-schema.json"
     }
   ],
   "schema": "tabular-data-package"
