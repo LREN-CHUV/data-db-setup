@@ -32,22 +32,25 @@ where the environment variables are:
 * FLYWAY_PASSWORD: database password, default to 'data'.
 * FLYWAY_SCHEMAS: Optional, comma-separated list of schemas managed by Flyway
 * FLYWAY_TABLE: Optional, name of Flyway's metadata table (default: schema_version)
-* DATASETS: column-separated list of datasets to load. Each dataset should have a descriptor defined as a Java properties file (\<dataset\>\_dataset.properties) located in a jar under eu.humanbrainproject.mip.migrations package.
+* DATASETS: (deprecated) column-separated list of datasets to load. Each dataset should have a descriptor defined as a Java properties file (\<dataset\>\_dataset.properties) located in a jar under eu.humanbrainproject.mip.migrations package.
 * DATAPACKAGE: column-separated list of datapackage.json files to load. This is an alternative method to describing datasets using properties files.
 * VIEWS: column-separated list of views to create. Each view should have a descriptor defined as a Java properties file (\<view\>\_view.properties) located in a jar under eu.humanbrainproject.mip.migrations package,
   as well as a SQL template whose name is defined with the property \_\_SQL_TEMPLATE and that should be located in the same jar and package.
 * AUTO_GENERATE_TABLES: if set to true, will attempt to generate the tables from the datapackage definition. Use this method only for development or quick prototyping, as tables should normally be created using SQL migrations managed by Flyway.
 * LOG_LEVEL: desired log level, default is 'info', use 'debug' for more verbose output
 
-The following environment variables should be defined statically by child images of data-db-setup:
+## Customizing the data tables
 
-* IMAGE: name of this Docker image, including version (for help message)
-* DATASETS: column-separated list of datasets to load.
-* DATAPACKAGE: column-separated list of datapackage.json files to load. This is an alternative method to describing datasets using properties files.
-* VIEWS: column-separated list of views to create.
-* AUTO_GENERATE_TABLES: if set to true, will attempt to generate the tables from the datapackage definition. Use this method only for development or quick prototyping, as tables should normally be created using SQL migrations managed by Flyway.
+`data-db-setup` does not provide much by itself, you need to customise it to your needs.
 
-This image is most likely going to be used as the parent image for a specialised image that installs a particular dataset.
+You need to create a new project that will contain the following elements:
+
+* a Dockerfile that inherit from hbpmip/data-db-setup
+* a set of SQL migration scripts that will create the data tables and views, to be managed by [Flyway](http://flywaydb.org/) and included in the Docker image
+* optionally, CSV files containing data to upload into the database if that data is publishable
+* a description of the structure of the data tables in the [Frictionlessdata package format](https://frictionlessdata.io/specs/)
+
+You can use the command `atomist create data db setup` from [MIP SDM](https://github.com/LREN-CHUV/mip-sdm) to generate a skeleton of this new project for you.
 
 The Dockerfile for the specialised image should look like:
 
@@ -70,6 +73,15 @@ Dockerfile
       DATAPACKAGE=/data/datapackage.json
 
 ```
+
+The following environment variables should be defined statically by child images of data-db-setup:
+
+* IMAGE: name of this Docker image, including version (for help message)
+* DATASETS: (deprecated) column-separated list of datasets to load.
+* DATAPACKAGE: column-separated list of datapackage.json files to load. This is an alternative method to describing datasets using properties files.
+* VIEWS: column-separated list of views to create. Each view should have a descriptor defined as a Java properties file (\<view\>\_view.properties) located in a jar under eu.humanbrainproject.mip.migrations package,
+  as well as a SQL template whose name is defined with the property \_\_SQL_TEMPLATE and that should be located in the same jar and package.
+* AUTO_GENERATE_TABLES: if set to true, will attempt to generate the tables from the datapackage definition. Use this method only for development or quick prototyping, as tables should normally be created using SQL migrations managed by Flyway.
 
 ## Build
 
