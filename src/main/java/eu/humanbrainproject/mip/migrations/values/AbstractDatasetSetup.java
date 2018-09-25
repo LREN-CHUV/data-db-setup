@@ -8,6 +8,8 @@ import org.flywaydb.core.api.migration.MigrationChecksumProvider;
 import org.flywaydb.core.api.migration.MigrationInfoProvider;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 import org.supercsv.cellprocessor.*;
+import org.supercsv.cellprocessor.Optional;
+import org.supercsv.cellprocessor.constraint.NotNull;
 import org.supercsv.cellprocessor.constraint.UniqueHashCode;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvListReader;
@@ -22,9 +24,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
@@ -246,9 +246,13 @@ public abstract class AbstractDatasetSetup implements JdbcMigration, MigrationIn
 
         // Use the list of columns from the CSV header as the source of truth, this is what will be used by SuperCSV
 
-        return columnsDef.stream()
+        Map<String, CellProcessor> processors = columnsDef.stream()
                 .filter(col -> csvColumns.contains(col.getName()))
-                .map(column -> getCellProcessorAdaptor(primaryKey, column))
+                .map(column -> new Pair<>(column.getName(), getCellProcessorAdaptor(primaryKey, column)))
+                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+
+        return csvColumns.stream()
+                .map(processors::get)
                 .toArray(CellProcessor[]::new);
     }
 
@@ -266,21 +270,84 @@ public abstract class AbstractDatasetSetup implements JdbcMigration, MigrationIn
                 case "varchar":
                 case "text":
                 case "string":
-                    return new Optional();
+                    if (column.isRequired()) {
+                        getLogger().debug("Read column " + column + " from CSV as required string");
+                        return new NotNull();
+                    } else {
+                        getLogger().debug("Read column " + column + " from CSV as optional string");
+                        return new Optional();
+                    }
                 case "numeric":
                 case "number":
-                    return new Optional(new ParseDouble());
+                    if (column.isRequired()) {
+                        getLogger().debug("Read column " + column + " from CSV as required double");
+                        return new ParseDouble();
+                    } else {
+                        getLogger().debug("Read column " + column + " from CSV as optional double");
+                        return new Optional(new ParseDouble());
+                    }
                 case "int":
                 case "integer":
-                    return new Optional(new ParseInt());
+                    if (column.isRequired()) {
+                        getLogger().debug("Read column " + column + " from CSV as required integer");
+                        return new ParseInt();
+                    } else {
+                        getLogger().debug("Read column " + column + " from CSV as optional integer");
+                        return new Optional(new ParseInt());
+                    }
                 case "date":
-                    return new Optional(new ParseDate(DateTimeFormatter.ISO_DATE.toString()));
+                    final ParseDate parseDate = new ParseDate(DateTimeFormatter.ISO_DATE.toString());
+                    if (column.isRequired()) {
+                        getLogger().debug("Read column " + column + " from CSV as required date");
+                        return parseDate;
+                    } else {
+                        getLogger().debug("Read column " + column + " from CSV as optional date");
+                        return new Optional(parseDate);
+                    }
                 case "timestamp":
-                    return new Optional(new ParseDate(DateTimeFormatter.ISO_DATE_TIME.toString()));
+                    final ParseDate parseTimestamp = new ParseDate(DateTimeFormatter.ISO_DATE_TIME.toString());
+                    if (column.isRequired()) {
+                        getLogger().debug("Read column " + column + " from CSV as required timestamp");
+                        return parseTimestamp;
+                    } else {
+                        getLogger().debug("Read column " + column + " from CSV as optional timestamp");
+                        return new Optional(parseTimestamp);
+                    }
                 default:
                     throw new IllegalArgumentException("Unknown type " + colType + " on column " + column);
             }
         }
     }
 
+    private static class Pair<T> {
+        private final java.lang.String key;
+        private final T value;
+
+        public Pair(String key, T value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public T getValue() {
+            return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Pair<?> pair = (Pair<?>) o;
+            return Objects.equals(key, pair.key) &&
+                    Objects.equals(value, pair.value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(key);
+        }
+    }
 }
