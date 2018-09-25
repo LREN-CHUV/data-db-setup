@@ -1,6 +1,10 @@
 
 # Changelog
 
+## 2.5.4 - 2018-09-25
+
+* Follow Frictionlessdata schema for constraints on fields
+
 ## 2.5.3 - 2018-09-25
 
 * Case sensitive for view and table names

@@ -270,7 +270,7 @@ public abstract class AbstractDatasetSetup implements JdbcMigration, MigrationIn
                 case "varchar":
                 case "text":
                 case "string":
-                    if (column.isRequired()) {
+                    if (column.getConstraints().isRequired()) {
                         getLogger().debug("Read column " + column + " from CSV as required string");
                         return new NotNull();
                     } else {
@@ -279,7 +279,7 @@ public abstract class AbstractDatasetSetup implements JdbcMigration, MigrationIn
                     }
                 case "numeric":
                 case "number":
-                    if (column.isRequired()) {
+                    if (column.getConstraints().isRequired()) {
                         getLogger().debug("Read column " + column + " from CSV as required double");
                         return new ParseDouble();
                     } else {
@@ -288,7 +288,7 @@ public abstract class AbstractDatasetSetup implements JdbcMigration, MigrationIn
                     }
                 case "int":
                 case "integer":
-                    if (column.isRequired()) {
+                    if (column.getConstraints().isRequired()) {
                         getLogger().debug("Read column " + column + " from CSV as required integer");
                         return new ParseInt();
                     } else {
@@ -297,7 +297,7 @@ public abstract class AbstractDatasetSetup implements JdbcMigration, MigrationIn
                     }
                 case "date":
                     final ParseDate parseDate = new ParseDate(DateTimeFormatter.ISO_DATE.toString());
-                    if (column.isRequired()) {
+                    if (column.getConstraints().isRequired()) {
                         getLogger().debug("Read column " + column + " from CSV as required date");
                         return parseDate;
                     } else {
@@ -306,7 +306,7 @@ public abstract class AbstractDatasetSetup implements JdbcMigration, MigrationIn
                     }
                 case "timestamp":
                     final ParseDate parseTimestamp = new ParseDate(DateTimeFormatter.ISO_DATE_TIME.toString());
-                    if (column.isRequired()) {
+                    if (column.getConstraints().isRequired()) {
                         getLogger().debug("Read column " + column + " from CSV as required timestamp");
                         return parseTimestamp;
                     } else {

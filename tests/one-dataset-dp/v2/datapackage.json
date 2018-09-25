@@ -26,11 +26,13 @@
         "datasetKey": "dataset",
         "fields": [
           {
+            "constraints": {
+              "required": true,
+              "unique": true
+            },
             "format": "default",
             "name": "id",
-            "required": true,
-            "type": "integer",
-            "unique": true
+            "type": "integer"
           },
           {
             "format": "default",

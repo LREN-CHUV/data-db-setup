@@ -11,8 +11,7 @@ public class Field {
     private String title = "";
     private String description = "";
     private String sqlType = null;
-    private boolean required = false;
-    private boolean unique = false;
+    private Constraints constraints = new Constraints();
 
     public String getName() {
         return name;
@@ -111,20 +110,12 @@ public class Field {
         }
     }
 
-    public boolean isRequired() {
-        return required;
+    public Constraints getConstraints() {
+        return constraints;
     }
 
-    public void setRequired(boolean required) {
-        this.required = required;
-    }
-
-    public boolean isUnique() {
-        return unique;
-    }
-
-    public void setUnique(boolean unique) {
-        this.unique = unique;
+    public void setConstraints(Constraints constraints) {
+        this.constraints = constraints;
     }
 
     @Override
