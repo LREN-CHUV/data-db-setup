@@ -1,7 +1,7 @@
 
 # Changelog
 
-## 2.5.3 - 2018-09-24
+## 2.5.3 - 2018-09-25
 
 * Case sensitive for view and table names
 
