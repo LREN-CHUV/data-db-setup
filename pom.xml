@@ -5,7 +5,7 @@
   <artifactId>data-db-setup</artifactId>
   <packaging>jar</packaging>
   <name>${project.artifactId}</name>
-  <version>2.5.3</version><!-- BUMP_VERSION -->
+  <version>2.5.4</version><!-- BUMP_VERSION -->
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
