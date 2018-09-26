@@ -29,12 +29,12 @@ where the environment variables are:
 
 * FLYWAY_HOST: database host, default to 'db'.
 * FLYWAY_PORT: database port, default to 5432.
-* FLYWAY_DATABASE_NAME: name of the database or schema, default to 'data'
+* FLYWAY_DATABASE_NAME: Optional, name of the database or schema, default to 'data'
 * FLYWAY_URL: JDBC url to the database, constructed by default from FLYWAY_DBMS, FLYWAY_HOST, FLYWAY_PORT and FLYWAY_DATABASE_NAME
-* FLYWAY_DRIVER: Fully qualified classname of the jdbc driver (autodetected by default based on flyway.url)
+* FLYWAY_DRIVER: Optional, fully qualified classname of the jdbc driver (autodetected by default based on flyway.url)
 * FLYWAY_USER: database user, default to 'data'.
 * FLYWAY_PASSWORD: database password, default to 'data'.
-* FLYWAY_SCHEMAS: Optional, comma-separated list of schemas managed by Flyway
+* FLYWAY_SCHEMAS: Optional, comma-separated list of schemas managed by Flyway, default to 'public'
 * FLYWAY_TABLE: Optional, name of Flyway's metadata table (default: schema_version)
 * DATASETS: (deprecated) column-separated list of datasets to load. Each dataset should have a descriptor defined as a Java properties file (\<dataset\>\_dataset.properties) located in a jar under eu.humanbrainproject.mip.migrations package.
 * DATAPACKAGE: column-separated list of datapackage.json files to load. This is an alternative method to describing datasets using properties files.
@@ -93,6 +93,8 @@ If the data cannot be published openly, you can rely on private Docker registrie
 ## Build
 
 Run: `./build.sh`
+
+This command will build the Docker image hbpmip/data-db-setup produced by this project
 
 ## Testing
 
