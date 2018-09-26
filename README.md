@@ -5,7 +5,7 @@
 
 ## Introduction
 
-This project uses Flyway to manage the database migration scripts for the research-grade data tables used by MIP.
+This project uses [Flyway](http://flywaydb.org/) to manage the database migration scripts that will create and fill the data features tables containing research-grade data used by MIP algorithms for machine learning.
 
 The research-grade data tables can contain the following types of data:
 
@@ -13,7 +13,11 @@ The research-grade data tables can contain the following types of data:
 * the features extracted from research datasets (ADNI, PPMI...)
 * the features extracted from clinical data
 
+The data stored in the feature tables is labelled research-grade as it should have gone through a data curation process (description, registration, adaptation to fit the MIP CDE variables, cleaning...).
+
 ## Usage
+
+`data-db` requires a running Postgres database with admin access where it will create new tables and store some data.
 
 Run:
 
@@ -47,7 +51,7 @@ You need to create a new project that will contain the following elements:
 
 * a Dockerfile that inherit from hbpmip/data-db-setup
 * a set of SQL migration scripts that will create the data tables and views, to be managed by [Flyway](http://flywaydb.org/) and included in the Docker image
-* optionally, CSV files containing data to upload into the database if that data is publishable
+* optionally, CSV files containing data to upload into the database if that data is publishable (1)
 * a description of the structure of the data tables in the [Frictionlessdata package format](https://frictionlessdata.io/specs/)
 
 You can use the command `atomist create data db setup` from [MIP SDM](https://github.com/LREN-CHUV/mip-sdm) to generate a skeleton of this new project for you.
@@ -82,6 +86,9 @@ The following environment variables should be defined statically by child images
 * VIEWS: column-separated list of views to create. Each view should have a descriptor defined as a Java properties file (\<view\>\_view.properties) located in a jar under eu.humanbrainproject.mip.migrations package,
   as well as a SQL template whose name is defined with the property \_\_SQL_TEMPLATE and that should be located in the same jar and package.
 * AUTO_GENERATE_TABLES: if set to true, will attempt to generate the tables from the datapackage definition. Use this method only for development or quick prototyping, as tables should normally be created using SQL migrations managed by Flyway.
+
+Note (1): a Docker image can be seen as a Zip file, it's perfectly reasonable to store data in it, as long as you do not attempt to store several Gigabytes of data. Most Docker images weight a few hundred MB, adding data from CSV files is reasonable.
+If the data cannot be published openly, you can rely on private Docker registries such as those provided by [Gitlab.com](https://gitlab.com) that provide a secured and password-protected storage for your Docker image and its data or binaries.
 
 ## Build
 
