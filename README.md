@@ -36,10 +36,10 @@ where the environment variables are:
 * FLYWAY_PASSWORD: database password, default to 'data'.
 * FLYWAY_SCHEMAS: Optional, comma-separated list of schemas managed by Flyway, default to 'public'
 * FLYWAY_TABLE: Optional, name of Flyway's metadata table (default: schema_version)
-* DATASETS: (deprecated) column-separated list of datasets to load. Each dataset should have a descriptor defined as a Java properties file (\<dataset\>\_dataset.properties) located in a jar under eu.humanbrainproject.mip.migrations package.
-* DATAPACKAGE: column-separated list of datapackage.json files to load. This is an alternative method to describing datasets using properties files.
-* VIEWS: column-separated list of views to create. Each view should have a descriptor defined as a Java properties file (\<view\>\_view.properties) located in a jar under eu.humanbrainproject.mip.migrations package,
-  as well as a SQL template whose name is defined with the property \_\_SQL_TEMPLATE and that should be located in the same jar and package.
+* DATASETS: (deprecated) column-separated list of datasets to load. Each dataset should have a descriptor defined as a Java properties file (\<dataset\>\_dataset.properties) located in /config folder.
+* DATAPACKAGE: column-separated list of datapackage.json files to load. This is an alternative method to describing datasets using properties files. Datapackage.json file should be located in the /data folder
+* VIEWS: column-separated list of views to create. Each view should have a descriptor defined as a Java properties file (\<view\>\_view.properties) located in /config folder,
+  as well as a SQL template whose name is defined with the property \_\_SQL_TEMPLATE and that should be located in the same folder.
 * AUTO_GENERATE_TABLES: if set to true, will attempt to generate the tables from the datapackage definition. Use this method only for development or quick prototyping, as tables should normally be created using SQL migrations managed by Flyway.
 * LOG_LEVEL: desired log level, default is 'info', use 'debug' for more verbose output
 
@@ -67,7 +67,7 @@ Dockerfile
   ARG VCS_REF
   ARG VERSION
 
-  COPY data/empty.csv datapackage.json /data/
+  COPY data/empty.csv data/datapackage.json /data/
   COPY sql/V1_0__create.sql /flyway/sql/
   COPY docker/run.sh /
 
@@ -83,8 +83,8 @@ The following environment variables should be defined statically by child images
 * IMAGE: name of this Docker image, including version (for help message)
 * DATASETS: (deprecated) column-separated list of datasets to load.
 * DATAPACKAGE: column-separated list of datapackage.json files to load. This is an alternative method to describing datasets using properties files.
-* VIEWS: column-separated list of views to create. Each view should have a descriptor defined as a Java properties file (\<view\>\_view.properties) located in a jar under eu.humanbrainproject.mip.migrations package,
-  as well as a SQL template whose name is defined with the property \_\_SQL_TEMPLATE and that should be located in the same jar and package.
+* VIEWS: column-separated list of views to create. Each view should have a descriptor defined as a Java properties file (\<view\>\_view.properties) located in /config folder,
+  as well as a SQL template whose name is defined with the property \_\_SQL_TEMPLATE and that should be located in the same folder.
 * AUTO_GENERATE_TABLES: if set to true, will attempt to generate the tables from the datapackage definition. Use this method only for development or quick prototyping, as tables should normally be created using SQL migrations managed by Flyway.
 
 Note (1): a Docker image can be seen as a Zip file, it's perfectly reasonable to store data in it, as long as you do not attempt to store several Gigabytes of data. Most Docker images weight a few hundred MB, adding data from CSV files is reasonable.

@@ -24,9 +24,11 @@ fi
 FLYWAY_OPTS="$FLYWAY_OPTS -locations=filesystem:/flyway/sql,classpath:eu/humanbrainproject/mip/migrations -jarDirs=/flyway/jars"
 FLYWAY_OPTS="$FLYWAY_OPTS -callbacks=eu.humanbrainproject.mip.migrations.GenerateTablesCallback"
 
+[ -f /env.sh ] && source /env.sh
+
 dockerize $DOCKERIZE_OPTS flyway $FLYWAY_OPTS $@ || {
   err=$?
-  echo "Migration failed. It was using the following environment variables:"
+  echo "[ERROR] Migration failed. It was using the following environment variables:"
   env | grep -v PASSWORD | grep -v PWD
   exit $err
 }

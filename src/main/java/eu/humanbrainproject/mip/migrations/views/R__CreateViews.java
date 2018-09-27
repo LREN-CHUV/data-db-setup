@@ -1,6 +1,7 @@
 package eu.humanbrainproject.mip.migrations.views;
 
 import eu.humanbrainproject.mip.migrations.MigrationConfiguration;
+import eu.humanbrainproject.mip.migrations.datapackage.Field;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.migration.MigrationChecksumProvider;
@@ -16,6 +17,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
 @SuppressWarnings("unused")
@@ -54,13 +56,13 @@ public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, Mig
         Map<String, Object> scopes = new HashMap<>();
         int i = 0;
         for (String table : getTables(view)) {
-            Properties tableProperties = config.getColumnsProperties(table);
+            final MigrationConfiguration.DatasetConfiguration tableConfiguration = config.getTableConfiguration(table);
 
-            String tableName = tableProperties.getProperty("__TABLE", table);
-            List<String> columns = config.getColumns(table);
-            List<String> ids = config.getIdColumns(table);
+            List<String> columns = tableConfiguration.getFields().stream().map(Field::getName).collect(Collectors.toList());
+            List<String> ids = tableConfiguration.getDatasetPrimaryKey() == null ?
+                    Collections.emptyList() : Collections.singletonList(tableConfiguration.getDatasetPrimaryKey());
 
-            final Table templateValue = new Table(tableName, columns, ids);
+            final Table templateValue = new Table(table, columns, ids);
             scopes.put("table" + (++i), templateValue);
         }
 
@@ -117,8 +119,8 @@ public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, Mig
             propertiesFile = "view.properties" ;
         }
         if (!config.existsConfigResource(propertiesFile)) {
-            throw new IllegalStateException("Cannot load resource for view " + viewName + " from /config/" +
-                    propertiesFile + ". Check VIEWS environment variable and contents of the jar");
+            throw new IllegalStateException("Cannot load resource for view " + viewName + " from " +
+                    config.getConfigResourcePath(propertiesFile) + ". Check VIEWS environment variable and contents of the jar");
         }
         return config.getConfigResource(propertiesFile);
     }
@@ -134,8 +136,8 @@ public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, Mig
             }
         }
         if (!config.existsConfigResource(sqlTemplateFile)) {
-            throw new IllegalStateException("Cannot load resource for view " + viewName + " from /config/" +
-                    sqlTemplateFile + ". Check VIEWS environment variable and contents of the jar");
+            throw new IllegalStateException("Cannot load resource for view " + viewName + " from " +
+                    config.getConfigResourcePath(sqlTemplateFile) + ". Check VIEWS environment variable and contents of the jar");
         }
         return config.getConfigResource(sqlTemplateFile);
     }
@@ -179,8 +181,9 @@ public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, Mig
         // CRC for tables
         try {
             for (String table : getTables(view)) {
-                InputStream tableResource = config.getColumnsResource(table);
-                crcForResource(crc32, tableResource);
+                final String fields = config.getTableConfiguration(table).getFields().stream().map(Field::getName).reduce((f1, f2) -> f1 + "," + f2).orElse("");
+                bytes = fields.getBytes();
+                crc32.update(bytes, 0, bytes.length);
             }
         } catch (IOException e) {
             LOG.log(Level.WARNING, "Cannot read table properties", e);

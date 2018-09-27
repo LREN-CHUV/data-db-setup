@@ -1,16 +1,21 @@
 package eu.humanbrainproject.mip.migrations;
 
 import eu.humanbrainproject.mip.migrations.datapackage.DataPackage;
+import eu.humanbrainproject.mip.migrations.datapackage.Field;
 import eu.humanbrainproject.mip.migrations.datapackage.Resource;
+import eu.humanbrainproject.mip.migrations.datapackage.Schema;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
 
 public class MigrationConfiguration {
 
-    private final Map<String, Properties> tableColumns = new HashMap<>();
-    private final Map<String, Properties> datasetProperties = new HashMap<>();
+    private static final Logger LOG = LoggerFactory.getLogger("Configuration");
+
+    private static final String TABLE_REGEX = "\\$\\{table}";
 
     private DataPackage datapackage;
     private Class<?> resourceBaseClass = this.getClass();
@@ -22,7 +27,7 @@ public class MigrationConfiguration {
         this.resourceBaseClass = resourceBaseClass;
     }
 
-    public DataPackage getDataPackage() {
+    DataPackage getDataPackage() {
         String datapackageStr = System.getenv("DATAPACKAGE");
         if (datapackage == null && datapackageStr != null && !datapackageStr.isEmpty()) {
             if (!existsDataResource(datapackageStr)) {
@@ -46,15 +51,26 @@ public class MigrationConfiguration {
         return datasetsStr.trim().split(",");
     }
 
-    public Properties getDatasetProperties(String datasetName) throws IOException {
-        Properties datasetProperties = this.datasetProperties.get(datasetName);
-        if (datasetProperties == null) {
-            datasetProperties = new Properties();
-            InputStream datasetResource = getDatasetResource(datasetName);
-            datasetProperties.load(datasetResource);
-            this.datasetProperties.put(datasetName, datasetProperties);
+    public DatasetConfiguration getDatasetConfiguration(String datasetName) {
+        if (getDataPackage() != null) {
+            return new DatasetConfigurationFromDataPackage(datasetName);
+        } else {
+            return new DatasetConfigurationFromProperties(datasetName);
         }
-        return datasetProperties;
+    }
+
+    public DatasetConfiguration getTableConfiguration(String tableName) {
+        try {
+            for (String dataset: getDatasets()) {
+                DatasetConfiguration datasetConfiguration = getDatasetConfiguration(dataset);
+                    if (datasetConfiguration.getDatasetTableName().equals(tableName)) {
+                        return datasetConfiguration;
+                    }
+            }
+        } catch (IOException e) {
+            LOG.error("Configuration problem: " + e.getMessage(), e);
+        }
+        throw new RuntimeException("Cannot find configuration for table " + tableName);
     }
 
     public InputStream getDatasetResource(String datasetName) {
@@ -75,54 +91,7 @@ public class MigrationConfiguration {
         return getConfigResource(propertiesFile);
     }
 
-    public Properties getColumnsProperties(String tableName) throws IOException {
-        Properties columnsProperties = tableColumns.get(tableName);
-        if (columnsProperties == null) {
-            columnsProperties = new Properties();
-            InputStream datasetResource = getColumnsResource(tableName);
-            columnsProperties.load(datasetResource);
-            tableColumns.put(tableName, columnsProperties);
-        }
-        return columnsProperties;
-    }
-
-    public InputStream getColumnsResource(String tableName) {
-        String propertiesFile = (tableName == null) ? "columns.properties" : tableName.toLowerCase() + "_columns.properties";
-
-        if (!existsConfigResource(propertiesFile) && getDatasets().length == 1) {
-            if (existsConfigResource("columns.properties")) {
-                propertiesFile = "columns.properties";
-            }
-        }
-
-        if (!existsConfigResource(propertiesFile)) {
-            throw new IllegalStateException("Cannot load resource from " + getConfigResourcePath(propertiesFile) +
-                    ". Check DATASETS environment variable and contents of the Docker image");
-        }
-        return getConfigResource(propertiesFile);
-    }
-
-    public List<String> getColumns(String tableName) throws IOException {
-        Properties columnsDef = getColumnsProperties(tableName);
-        String columnsStr = columnsDef.getProperty("__COLUMNS");
-        return Arrays.asList(StringUtils.split(columnsStr, ","));
-    }
-
-    public List<String> getIdColumns(String tableName) throws IOException {
-        Properties columnsDef = getColumnsProperties(tableName);
-        List<String> columns = getColumns(tableName);
-        List<String> ids = new ArrayList<>();
-
-        for (String column : columns) {
-            if (columnsDef.getProperty(column + ".constraints", "").equals("is_index") ||
-                    columnsDef.getProperty(column + ".is_index", "").equals("true")) {
-                ids.add(column);
-            }
-        }
-        return ids;
-    }
-
-    private String getConfigResourcePath(String path) {
+    public String getConfigResourcePath(String path) {
         if (!path.startsWith("/")) {
             return "/flyway/config/" + path;
         }
@@ -180,6 +149,191 @@ public class MigrationConfiguration {
         } catch (FileNotFoundException e) {
             throw new RuntimeException("Cannot read file " + dataFile.getAbsolutePath());
         }
+    }
+
+    public interface DatasetConfiguration {
+
+        String getDatasetCsvFilePath() throws IOException;
+
+        String getDatasetTableName() throws IOException;
+
+        String getDatasetDeleteQuery() throws IOException;
+
+        String getDatasetPrimaryKey() throws IOException;
+
+        List<Field> getFields() throws IOException;
+
+    }
+
+    class DatasetConfigurationFromProperties implements DatasetConfiguration {
+
+        private final Map<String, Properties> datasetProperties = new HashMap<>();
+        private final Map<String, Properties> tableColumns = new HashMap<>();
+
+        private String datasetName;
+
+        DatasetConfigurationFromProperties(String datasetName) {
+            this.datasetName = datasetName;
+        }
+
+        @Override
+        public String getDatasetCsvFilePath() throws IOException {
+            final Properties dataset = getDatasetProperties();
+
+            final String csvFileName = dataset.getProperty("__CSV_FILE", "/data/values.csv");
+            return getDataResourcePath(csvFileName);
+        }
+
+        @Override
+        public String getDatasetTableName() throws IOException {
+            final Properties dataset = getDatasetProperties();
+
+            final String tableName = dataset.getProperty("__TABLE", "");
+
+            if (tableName == null) {
+                throw new IllegalArgumentException("__TABLE properties is not defined for dataset " + datasetName);
+            }
+
+            return tableName;
+        }
+
+        @Override
+        public String getDatasetDeleteQuery() throws IOException {
+            final Properties dataset = getDatasetProperties();
+            final String tableName = getDatasetTableName();
+
+            return dataset.getProperty("__DELETE_SQL", "DELETE FROM \"" + tableName + "\"")
+                    .replaceFirst(TABLE_REGEX, tableName);
+        }
+
+        @Override
+        public String getDatasetPrimaryKey() throws IOException {
+            final String tableName = getDatasetTableName();
+            final Properties columns = getColumnsProperties(tableName);
+            String columnsStr = columns.getProperty("__COLUMNS");
+
+            for (String column: StringUtils.split(columnsStr, ",")) {
+
+                if (columns.getProperty(column + ".constraints", "").equals("is_index")) {
+                    return column;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public List<Field> getFields() throws IOException {
+            final String tableName = getDatasetTableName();
+            final Properties columns = getColumnsProperties(tableName);
+
+            String columnsStr = columns.getProperty("__COLUMNS");
+            List<Field> fields = new ArrayList<>();
+
+            for (String column: StringUtils.split(columnsStr, ",")) {
+
+                String sqlType = columns.getProperty(column + ".type", "VARCHAR");
+                if (columns.getProperty(column + ".type") == null) {
+                    LOG.warn("Column type for " + column + " is not defined in columns.properties");
+                }
+
+                Field field = new Field();
+                field.setName(column);
+                field.setSqlType(sqlType);
+
+                fields.add(field);
+            }
+            return fields;
+        }
+
+        private Properties getDatasetProperties() throws IOException {
+            Properties datasetProperties = this.datasetProperties.get(datasetName);
+            if (datasetProperties == null) {
+                datasetProperties = new Properties();
+                InputStream datasetResource = getDatasetResource(datasetName);
+                datasetProperties.load(datasetResource);
+                this.datasetProperties.put(datasetName, datasetProperties);
+            }
+            return datasetProperties;
+        }
+
+        private Properties getColumnsProperties(String tableName) throws IOException {
+            Properties columnsProperties = tableColumns.get(tableName);
+            if (columnsProperties == null) {
+                columnsProperties = new Properties();
+                InputStream datasetResource = getColumnsResource(tableName);
+                columnsProperties.load(datasetResource);
+                tableColumns.put(tableName, columnsProperties);
+            }
+            return columnsProperties;
+        }
+
+        private InputStream getColumnsResource(String tableName) {
+            String propertiesFile = (tableName == null) ? "columns.properties" : tableName.toLowerCase() + "_columns.properties";
+
+            if (!existsConfigResource(propertiesFile) && getDatasets().length == 1) {
+                if (existsConfigResource("columns.properties")) {
+                    propertiesFile = "columns.properties";
+                }
+            }
+
+            if (!existsConfigResource(propertiesFile)) {
+                throw new IllegalStateException("Cannot load resource from " + getConfigResourcePath(propertiesFile) +
+                        ". Check DATASETS environment variable and contents of the Docker image");
+            }
+            return getConfigResource(propertiesFile);
+        }
+
+    }
+
+    class DatasetConfigurationFromDataPackage implements DatasetConfiguration {
+
+        private String datasetName;
+
+        DatasetConfigurationFromDataPackage(String datasetName) {
+            this.datasetName = datasetName;
+        }
+
+        @Override
+        public String getDatasetCsvFilePath() {
+            return getDataPackage().getResource(datasetName).getPath();
+        }
+
+        @Override
+        public String getDatasetTableName() {
+            final String tableName = getDataPackage().getResource(datasetName).getSchema().getTableName();
+
+            if (tableName == null) {
+                throw new IllegalArgumentException("tableName property is not defined in the schema for dataset " + datasetName);
+            }
+
+            return tableName;
+        }
+
+        @Override
+        public String getDatasetDeleteQuery() {
+            final Resource resource = getDataPackage().getResource(datasetName);
+            String query = resource.getDeleteQuery();
+            if (query == null) {
+                final Schema schema = resource.getSchema();
+                if (schema.getDatasetKey() == null) {
+                    return "DELETE FROM \"" + schema.getTableName() + "\"";
+                } else {
+                    return "DELETE FROM \"" + schema.getTableName() + "\" WHERE \"" + schema.getDatasetKey() + "\" = '" + resource.getName() + "'";
+                }
+            }
+            return query;
+        }
+
+        @Override
+        public String getDatasetPrimaryKey() {
+            return getDataPackage().getResource(datasetName).getSchema().getPrimaryKey();
+        }
+
+        @Override
+        public List<Field> getFields() {
+            return getDataPackage().getResource(datasetName).getSchema().getFields();
+        }
+
     }
 
 }
