@@ -179,7 +179,7 @@ public class R__SetupValues implements JdbcMigration, MigrationInfoProvider, Mig
                     }
                 }
                 statement.executeBatch(); // insert remaining records
-                LOG.info("Saved " + csvReader.getLineNumber() + " records for dataset " + datasetName + " into the database");
+                LOG.info("Saved " + (csvReader.getLineNumber() - 1) + " records for dataset " + datasetName + " into the database");
             }
 
         }
