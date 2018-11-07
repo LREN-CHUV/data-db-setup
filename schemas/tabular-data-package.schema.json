@@ -537,6 +537,10 @@
               "{\n  \"schema\": {\n    \"fields\": [\n      {\n        \"name\": \"first_name\",\n        \"type\": \"string\"\n        \"constraints\": {\n          \"required\": true\n        }\n      },\n      {\n        \"name\": \"age\",\n        \"type\": \"integer\"\n      },\n    ],\n    \"primaryKey\": [\n      \"name\"\n    ]\n  }\n}\n"
             ],
             "properties": {
+              "datasetKey": {
+                "description": "A dataset key is a field name whose values are the code of the dataset owning the data of the current row",
+                "type": "string"
+              },
               "fields": {
                 "description": "An `array` of Table Schema Field objects.",
                 "examples": [
@@ -2082,6 +2086,10 @@
                     "type": "string"
                   }
                 ]
+              },
+              "tableName": {
+                "description": "Optional, name of the table that will contain the fields described by this schema",
+                "type": "string"
               }
             },
             "propertyOrder": 40,
@@ -2141,6 +2149,10 @@
             "propertyOrder": 140,
             "title": "Sources",
             "type": "array"
+          },
+          "tableName": {
+            "description": "Name of the table that will contain the data contained in this resource",
+            "type": "string"
           },
           "title": {
             "description": "A human-readable title.",

@@ -1,11 +1,16 @@
-FROM python:3.6.6-alpine3.8
+FROM hbpmip/data-db-setup as parent-image
+
+# Build stage for quality control
+FROM python:3.6.6-alpine3.8 as data-qc-env
 
 RUN apk add --no-cache python3-dev build-base
-RUN pip3 install goodtables
+RUN pip3 install goodtables jsonspec
 
-COPY v1/ data/
+COPY --from=parent-image /schemas/tabular-data-package.schema.json /schemas/
+COPY v1/ /data/
 WORKDIR /data
 
+RUN json validate --schema-file=/schemas/tabular-data-package.schema.json < /data/datapackage.json
 RUN goodtables validate datapackage.json
 
 # Final image

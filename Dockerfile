@@ -23,6 +23,7 @@ RUN cp /usr/share/maven/ref/settings-docker.xml /root/.m2/settings.xml \
     && mvn clean package
 
 RUN jar cvf target/logback.jar -C src/main/resources logback.xml
+
 # Final image
 FROM hbpmip/flyway:5.1.4-0
 MAINTAINER Ludovic Claude <ludovic.claude@chuv.ch>
@@ -44,6 +45,7 @@ COPY --from=build-java-env \
         /usr/share/maven/ref/repository/ch/qos/logback/logback-core/1.2.3/logback-core-1.2.3.jar \
         /usr/share/maven/ref/repository/ch/qos/logback/logback-classic/1.2.3/logback-classic-1.2.3.jar \
         /flyway/lib/
+COPY schemas/* /schemas/
 COPY docker/run.sh /
 
 RUN chmod +x /run.sh
