@@ -13,6 +13,23 @@
     </license>
   </licenses>
 
+  <properties>
+    <src.dir>src/main/java</src.dir>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <jdk.version>1.8</jdk.version>
+    <compiler.plugin.version>3.8.0</compiler.plugin.version>
+    <jar.plugin.version>3.1.0</jar.plugin.version>
+    <install.plugin.version>2.5.2</install.plugin.version>
+    <surefire.plugin.version>2.20.1</surefire.plugin.version>
+    <assembly.plugin.version>3.1.0</assembly.plugin.version>
+    <shade.plugin.version>3.2.1</shade.plugin.version>
+    <site.plugin.version>3.7.1</site.plugin.version>
+    <info.reports.plugin.version>3.0.0</info.reports.plugin.version>
+    <surefire.report.plugin.version>2.20.1</surefire.report.plugin.version>
+    <jxr.plugin.version>3.0.0</jxr.plugin.version>
+    <junit.version>5.3.1</junit.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.flywaydb</groupId>
@@ -51,11 +68,6 @@
     </dependency>
   </dependencies>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <src.dir>src/main/java</src.dir>
-  </properties>
-
   <build>
     <finalName>${project.artifactId}</finalName>
     <sourceDirectory>${src.dir}</sourceDirectory>
@@ -79,10 +91,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.6.1</version>
+        <version>${compiler.plugin.version}</version>
         <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>${jdk.version}</source>
+          <target>${jdk.version}</target>
         </configuration>
       </plugin>
     </plugins>

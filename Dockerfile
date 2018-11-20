@@ -1,5 +1,5 @@
 # Build stage for Java classes
-FROM maven:3.5.2-jdk-8-alpine as build-java-env
+FROM hbpmip/java-base-build:3.6.0-jdk-11-0 as build-java-env
 
 ENV HOME=/root
 COPY docker/seed-src /project/docker/seed-src
