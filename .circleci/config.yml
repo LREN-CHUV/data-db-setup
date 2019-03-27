@@ -1,17 +1,22 @@
 ---
 
-version: 2
+# Sample advanced CircleCI configuration: https://github.com/transcom/mymove/blob/master/.circleci/config.yml
+
+version: 2.1
 jobs:
   build:
     working_directory: ~/src
     docker:
-      - image: hbpmip/docker-compose-for-ci:17.06-1
+      - image: hbpmip/docker-compose-for-ci:18.09-1
     environment:
        - CIRCLECI: true
     steps:
       - setup_remote_docker:
-          version: 17.06.0-ce
+          version: 18.06.0-ce
       - checkout
+      - restore_cache:
+          keys:
+            - pre-commit-dot-cache-{{ checksum ".pre-commit-config.yaml" }}
       - run:
           name: "Install requirements"
           command: |
@@ -21,27 +26,22 @@ jobs:
           name: "Validate code quality"
           command: |
             pre-commit run --all-files
+      - save_cache:
+          key: pre-commit-dot-cache-{{ checksum ".pre-commit-config.yaml" }}
+          paths:
+            - ~/.cache/pre-commit
       - run:
           name: "Build the project"
-          command: |
-            PATH=$PATH:/$HOME/.captain/bin/ ./build.sh
+          command: ./build.sh
       - run:
           name: "Test with one dataset"
-          command: |
-            PATH=$PATH:/$HOME/.captain/bin/ ./tests/one-dataset/test.sh
+          command: ./tests/one-dataset/test.sh
       - run:
           name: "Test with several datasets"
-          command: |
-            PATH=$PATH:/$HOME/.captain/bin/ ./tests/several-datasets/test.sh
+          command: ./tests/several-datasets/test.sh
       - run:
           name: "Test creating a view joining tables"
-          command: |
-            PATH=$PATH:/$HOME/.captain/bin/ ./tests/joined-tables/test.sh
+          command: ./tests/joined-tables/test.sh
       - run:
           name: "Test creating a view for a union of tables"
-          command: |
-            PATH=$PATH:/$HOME/.captain/bin/ ./tests/union-of-tables/test.sh
-
-notify:
-  webhooks:
-    - url: https://webhook.atomist.com/atomist/circle/teams/T233KRG4R
+          command: ./tests/union-of-tables/test.sh

@@ -1,7 +1,0 @@
-target_image:
-  build: Dockerfile
-  image: hbpmip/data-db-setup
-  pre:
-    - echo "Building hbpmip/data-db-setup image"
-  post:
-    - echo "Finished building hbpmip/data-db-setup image"
