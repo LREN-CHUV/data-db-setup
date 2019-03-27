@@ -4,9 +4,8 @@ import eu.humanbrainproject.mip.migrations.MigrationConfiguration;
 import eu.humanbrainproject.mip.migrations.datapackage.Field;
 import org.apache.commons.lang3.StringUtils;
 import org.flywaydb.core.api.MigrationVersion;
-import org.flywaydb.core.api.migration.MigrationChecksumProvider;
-import org.flywaydb.core.api.migration.MigrationInfoProvider;
-import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
+import org.flywaydb.core.api.migration.Context;
+import org.flywaydb.core.api.migration.JavaMigration;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
 @SuppressWarnings("unused")
-public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, MigrationChecksumProvider {
+public class R__CreateViews implements JavaMigration {
 
     private static final Logger LOG = Logger.getLogger("Create views");
 
@@ -33,8 +32,10 @@ public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, Mig
         return false;
     }
 
-    public void migrate(Connection connection) throws Exception {
+    public void migrate(Context context) throws Exception {
         String[] views = getViews();
+        Connection connection = context.getConnection();
+
         try {
 
             connection.setAutoCommit(false);
@@ -140,6 +141,11 @@ public class R__CreateViews implements JdbcMigration, MigrationInfoProvider, Mig
                     config.getConfigResourcePath(sqlTemplateFile) + ". Check VIEWS environment variable and contents of the jar");
         }
         return config.getConfigResource(sqlTemplateFile);
+    }
+
+    @Override
+    public boolean canExecuteInTransaction() {
+        return true;
     }
 
     @Override
