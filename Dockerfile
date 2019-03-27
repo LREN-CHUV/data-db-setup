@@ -38,8 +38,8 @@ COPY --from=build-java-env \
         /usr/share/maven/ref/repository/net/sf/supercsv/super-csv/2.4.0/super-csv-2.4.0.jar \
         /usr/share/maven/ref/repository/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar \
         /usr/share/maven/ref/repository/com/github/spullara/mustache/java/compiler/0.9.5/compiler-0.9.5.jar \
-        /usr/share/maven/ref/repository/com/fasterxml/jackson/core/jackson-core/2.9.7/jackson-core-2.9.7.jar \
-        /usr/share/maven/ref/repository/com/fasterxml/jackson/core/jackson-databind/2.9.7/jackson-databind-2.9.7.jar \
+        /usr/share/maven/ref/repository/com/fasterxml/jackson/core/jackson-core/2.9.8/jackson-core-2.9.8.jar \
+        /usr/share/maven/ref/repository/com/fasterxml/jackson/core/jackson-databind/2.9.8/jackson-databind-2.9.8.jar \
         /usr/share/maven/ref/repository/com/fasterxml/jackson/core/jackson-annotations/2.9.0/jackson-annotations-2.9.0.jar \
         /usr/share/maven/ref/repository/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar \
         /usr/share/maven/ref/repository/ch/qos/logback/logback-core/1.2.3/logback-core-1.2.3.jar \

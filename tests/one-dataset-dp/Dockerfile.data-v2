@@ -4,7 +4,7 @@ FROM hbpmip/data-db-setup as parent-image
 FROM python:3.6.6-alpine3.8 as data-qc-env
 
 RUN apk add --no-cache python3-dev build-base
-RUN pip3 install goodtables jsonspec
+RUN pip3 install goodtables json-spec[cli]
 
 COPY --from=parent-image /schemas/tabular-data-package.schema.json /schemas/
 COPY v2/ /data/
