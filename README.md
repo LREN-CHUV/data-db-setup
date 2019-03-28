@@ -22,7 +22,7 @@ The data stored in the feature tables is labelled research-grade as it should ha
 Run:
 
 ```console
-$ docker run -i -t --rm -e FLYWAY_HOST=`hostname` hbpmip/data-db-setup:2.5.5 migrate
+$ docker run -i -t --rm -e FLYWAY_HOST=`hostname` hbpmip/data-db-setup:2.6.0 migrate
 ```
 
 where the environment variables are:
@@ -61,7 +61,7 @@ The Dockerfile for the specialised image should look like:
 Dockerfile
 ```dockerfile
   # Final image
-  FROM hbpmip/data-db-setup:2.5.5
+  FROM hbpmip/data-db-setup:2.6.0
 
   ARG BUILD_DATE
   ARG VCS_REF
