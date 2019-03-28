@@ -25,7 +25,7 @@ RUN cp /usr/share/maven/ref/settings-docker.xml /root/.m2/settings.xml \
 RUN jar cvf target/logback.jar -C src/main/resources logback.xml
 
 # Final image
-FROM hbpmip/flyway:5.1.4-0
+FROM hbpmip/flyway:5.2.4-0
 MAINTAINER Ludovic Claude <ludovic.claude@chuv.ch>
 
 ARG BUILD_DATE
@@ -44,7 +44,7 @@ COPY --from=build-java-env \
         /usr/share/maven/ref/repository/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar \
         /usr/share/maven/ref/repository/ch/qos/logback/logback-core/1.2.3/logback-core-1.2.3.jar \
         /usr/share/maven/ref/repository/ch/qos/logback/logback-classic/1.2.3/logback-classic-1.2.3.jar \
-        /flyway/lib/
+        /flyway/drivers/
 COPY schemas/* /schemas/
 COPY docker/run.sh /
 
