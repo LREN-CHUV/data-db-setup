@@ -47,7 +47,7 @@ public class GenerateTablesCallback implements Callback {
 
         for (Resource resource: config.getDataPackage().getResources()) {
             if (resource.getSchema().getTableName() == null) {
-                throw new IllegalArgumentException("tableName property is not defined in the schema for dataset " + resource.getName());
+                throw new IllegalArgumentException("tableName property is not defined in the schema for resource " + resource.getName());
             }
             generateTable(connection, resource.getSchema());
         }

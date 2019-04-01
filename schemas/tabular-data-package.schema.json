@@ -244,6 +244,14 @@
             "propertyOrder": 230,
             "title": "Data"
           },
+          "dataset": {
+            "description": "Name of the dataset. Default to the value defined in property 'name'",
+            "type": "string"
+          },
+          "deleteQuery": {
+            "description": "Query used to delete old dataset items during a refresh. Default to an auto-generated SQL statement",
+            "type": "string"
+          },
           "description": {
             "description": "A text description. Markdown is encouraged.",
             "examples": [

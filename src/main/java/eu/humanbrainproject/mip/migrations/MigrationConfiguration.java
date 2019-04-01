@@ -318,7 +318,7 @@ public class MigrationConfiguration {
                 if (schema.getDatasetKey() == null) {
                     return "DELETE FROM \"" + schema.getTableName() + "\"";
                 } else {
-                    return "DELETE FROM \"" + schema.getTableName() + "\" WHERE \"" + schema.getDatasetKey() + "\" = '" + resource.getName() + "'";
+                    return "DELETE FROM \"" + schema.getTableName() + "\" WHERE \"" + schema.getDatasetKey() + "\" = '" + resource.computeDataset() + "'";
                 }
             }
             return query;

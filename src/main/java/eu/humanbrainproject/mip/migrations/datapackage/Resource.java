@@ -14,6 +14,7 @@ public class Resource {
     private String mediaType = "";
     private String encoding;
     private String deleteQuery;
+    private String dataset;
 
     @JsonProperty("schema")
     private Schema schema;
@@ -40,6 +41,14 @@ public class Resource {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDataset() {
+        return dataset;
+    }
+
+    public void setDataset(String dataset) {
+        this.dataset = dataset;
     }
 
     public String getDescription() {
@@ -88,5 +97,11 @@ public class Resource {
 
     public void setSchema(Schema schema) {
         this.schema = schema;
+    }
+
+    public String computeDataset() {
+        if (!"".equals(dataset) && dataset != null) {
+            return dataset;
+        } else return getName();
     }
 }
