@@ -1,6 +1,20 @@
 
 # Changelog
 
+## 2.6.1 - 2019-04-01
+
+* Add dataset property to a resource
+
+## 2.6.0 - 2019-03-28
+
+* Add schema for table-schema and use it for validation
+* Update Flyway and other libraries
+* [dev] Do not use captain anymore for the build
+
+## 2.5.5 - 2018-09-27
+
+* Restore migrations that create views
+
 ## 2.5.4 - 2018-09-25
 
 * Follow Frictionlessdata schema for constraints on fields
